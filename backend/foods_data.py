@@ -6,7 +6,7 @@
 
 import random
 from datetime import datetime
-from foods_database_csv import FOOD_DATABASE, get_foods_by_category, get_foods_by_ingredient
+from foods_data import FOOD_DATABASE, get_foods_by_category, get_foods_by_ingredient
 
 
 # ============================================
