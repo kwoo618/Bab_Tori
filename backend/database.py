@@ -1,10 +1,7 @@
-<<<<<<< HEAD
 """
 PostgreSQL 데이터베이스 연결 설정
 SQLAlchemy를 사용한 DB 연결 관리
 """
-=======
->>>>>>> 0e85058ab27e54e2ec28e7ca5bd9e7ab63b62823
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -12,7 +9,6 @@ from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
 
-<<<<<<< HEAD
 # 환경변수 로드
 load_dotenv()
 
@@ -55,30 +51,10 @@ def get_db():
         def read_items(db: Session = Depends(get_db)):
             ...
     """
-=======
-# .env 파일 로드
-load_dotenv()
-
-# 환경변수에서 DATABASE_URL 가져오기
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:qwer1234@localhost:5432/babtori_db")
-
-# SQLAlchemy 엔진 생성
-engine = create_engine(DATABASE_URL)
-
-# 세션 로컬 생성
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base 클래스 생성
-Base = declarative_base()
-
-# DB 세션 의존성
-def get_db():
->>>>>>> 0e85058ab27e54e2ec28e7ca5bd9e7ab63b62823
     db = SessionLocal()
     try:
         yield db
     finally:
-<<<<<<< HEAD
         db.close()
 
 
@@ -119,6 +95,3 @@ if __name__ == "__main__":
         print("2. .env 파일에 DATABASE_URL이 올바른지 확인")
         print("3. babtori_db 데이터베이스가 생성되었는지 확인")
         print("   → CREATE DATABASE babtori_db;")
-=======
-        db.close()
->>>>>>> 0e85058ab27e54e2ec28e7ca5bd9e7ab63b62823
