@@ -42,8 +42,8 @@ export default function FoodInputModal({ isOpen, onClose, onSubmit }: FoodInputM
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-40 flex items-end">
-      <div className="w-full bg-white rounded-t-2xl p-6 max-w-2xl mx-auto animate-in slide-in-from-bottom">
+  <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+    <div className="w-full bg-white rounded-2xl p-6 max-w-2xl mx-auto max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900">음식 기록하기</h2>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
