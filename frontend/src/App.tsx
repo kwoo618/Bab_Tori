@@ -69,7 +69,7 @@ export default function App() {
   }
 
   return (
-    <div className="app-container w-full max-w-md mx-auto bg-white shadow-xl">
+    <div className="app-container bg-white shadow-xl">
       <Header />
 
       <main className="flex-grow overflow-y-auto">

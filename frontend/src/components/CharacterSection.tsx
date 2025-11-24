@@ -66,14 +66,6 @@ export default function CharacterSection({ status, message, emoji, onOpenCollect
           color="bg-pink-400"
         />
       </div>
-
-      <button
-        onClick={onOpenCollection}
-        className="mt-6 w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded-lg transition-transform duration-200 hover:scale-105 flex items-center justify-center shadow-md"
-      >
-        <BookOpen className="w-5 h-5 mr-2" />
-        나의 음식 도감
-      </button>
     </section>
   )
 }
