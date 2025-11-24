@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Jua&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,34 +9,45 @@
 }
 
 body {
-  @apply bg-background text-foreground;
+  font-family: "Jua", sans-serif;
+  @apply bg-gray-200 text-gray-800;
 }
 
-/* 밥토리 커스텀 스타일 */
-:root {
-  --primary: #f97316;
-  --secondary: #a855f7;
-  --accent: #fb923c;
-  --background: #fafaf8;
-  --foreground: #1a1a1a;
-  --card: #ffffff;
-  --muted: #f1f1ef;
-  --muted-foreground: #7f7f7d;
-  --border: #e8e8e6;
+/* 앱 컨테이너 스타일 추가 */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
 
-.dark {
-  --primary: #fb923c;
-  --secondary: #c084fc;
-  --accent: #fed7aa;
-  --background: #1a1a19;
-  --foreground: #fafaf8;
-  --card: #27272a;
-  --muted: #3f3f46;
-  --muted-foreground: #a1a1a9;
-  --border: #3f3f46;
+@media (min-width: 768px) {
+  .app-container {
+    max-height: 844px;
+  }
 }
 
+/* 말풍선 애니메이션 추가 */
+.bap-tory-talk-bubble {
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-15px);
+  }
+  60% {
+    transform: translateY(-7px);
+  }
+}
+
+/* 캐릭터 Float 애니메이션 */
 .character-animation {
   animation: float 3s ease-in-out infinite;
 }
@@ -49,11 +62,17 @@ body {
   }
 }
 
+/* 음식 카드 호버 효과 */
 .food-card-hover {
   @apply transition-all duration-300 hover:scale-105 hover:shadow-lg;
 }
 
-.progress-ring {
-  transform: rotate(-90deg);
-  transform-origin: 50% 50%;
+/* 채팅 스크롤바 커스터마이징 */
+.chat-box::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+  background-color: #4a5568;
+  border-radius: 20px;
 }

@@ -1,12 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useCharacter } from "../hooks/useCharacter"
 import { useWeather } from "../hooks/useWeather"
 import CharacterDisplay from "../components/CharacterDisplay"
 import CharacterStats from "../components/CharacterStats"
-import WeatherDisplay from "../components/WeatherDisplay"
-import { ChevronRight } from "lucide-react"
+import FoodInputModal, { type FoodInputData } from "../components/FoodInputModal"
 
 interface MainScreenProps {
   onRecommend: () => void
@@ -15,55 +14,73 @@ interface MainScreenProps {
 export default function MainScreen({ onRecommend }: MainScreenProps) {
   const { character } = useCharacter()
   const weather = useWeather()
-  const [greeting, setGreeting] = useState("")
+  const [isFoodModalOpen, setIsFoodModalOpen] = useState(false)
 
-  useEffect(() => {
-    const hour = new Date().getHours()
-    if (hour < 12) {
-      setGreeting("좋은 아침이야! 뭐 먹을래?")
-    } else if (hour < 18) {
-      setGreeting("점심 시간이야. 뭘 먹을까?")
-    } else {
-      setGreeting("저녁이야. 뭐 먹고 싶어?")
-    }
-  }, [])
+  const handleFoodSubmit = (data: FoodInputData) => {
+    console.log("음식 정보:", data)
+    setIsFoodModalOpen(false)
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6 pb-6">
-      {/* 헤더 */}
-      <div className="text-center pt-6">
-        <h1 className="text-4xl font-bold text-primary mb-2">밥토리</h1>
-        <p className="text-muted-foreground">음식으로 나를 성장시켜요!</p>
-      </div>
-
       {/* 캐릭터 디스플레이 */}
-      <div className="bg-white rounded-2xl p-8 shadow-md text-center">
+      <div className="bg-white rounded-3xl p-8 shadow-sm text-center">
         <CharacterDisplay level={character.level} satiety={character.satiety} />
       </div>
 
+      {/* EXP 게이지 */}
+      <div className="bg-white rounded-2xl p-5 shadow-sm">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-medium text-gray-700">EXP</span>
+          <span className="text-sm font-bold text-gray-700">
+            {character.exp} / {character.nextLevelExp}
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+          <div
+            className="bg-gradient-to-r from-green-400 to-green-500 h-full transition-all duration-500"
+            style={{ width: `${Math.min(100, (character.exp / character.nextLevelExp) * 100)}%` }}
+          />
+        </div>
+      </div>
+
       {/* 상태 정보 */}
-      <div className="bg-white rounded-2xl p-6 shadow-md space-y-4">
-        <h2 className="text-xl font-bold text-foreground">밥토리의 상태</h2>
+      <div className="bg-white rounded-2xl p-5 shadow-sm">
         <CharacterStats character={character} />
       </div>
 
       {/* 날씨 정보 */}
-      <div className="bg-white rounded-2xl p-6 shadow-md">
-        <h2 className="text-xl font-bold text-foreground mb-4">오늘 날씨</h2>
-        <WeatherDisplay weather={weather} />
+      <div className="bg-white rounded-2xl p-5 shadow-sm">
+        <div className="flex justify-between items-center mb-4">
+          <span className="text-sm text-gray-600">현재 위치: 서울시 강남구</span>
+          <span className="text-sm font-medium text-gray-700">
+            {weather.temp}°C / 습도 {weather.humidity}%
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-3xl">{weather.icon}</span>
+          <span className="text-gray-600">{weather.description}</span>
+        </div>
       </div>
 
-      {/* 추천 버튼 */}
-      <div className="bg-gradient-to-r from-primary to-accent rounded-2xl p-6 text-white shadow-lg">
-        <p className="text-center text-lg font-semibold mb-4">{greeting}</p>
+      {/* 액션 버튼들 */}
+      <div className="space-y-3">
+        <button
+          onClick={() => setIsFoodModalOpen(true)}
+          className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-white py-3 rounded-2xl font-bold shadow-md hover:shadow-lg transition-shadow active:scale-95"
+        >
+          음식 기록하기
+        </button>
+
         <button
           onClick={onRecommend}
-          className="w-full bg-white text-primary font-bold py-3 rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-2xl font-bold shadow-md hover:shadow-lg transition-shadow active:scale-95"
         >
-          음식 추천받기
-          <ChevronRight size={20} />
+          나의 음식 도감
         </button>
       </div>
+
+      <FoodInputModal isOpen={isFoodModalOpen} onClose={() => setIsFoodModalOpen(false)} onSubmit={handleFoodSubmit} />
     </div>
   )
 }

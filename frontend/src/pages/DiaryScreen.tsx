@@ -1,108 +1,132 @@
 "use client"
 
 import { useState } from "react"
-import { useFoodRecords } from "../hooks/useFoodRecords"
 import { ChevronUp } from "lucide-react"
+import Calendar from "../components/Calendar"
+import FoodDetailModal from "../components/FoodDetailModal"
 
 interface DiaryScreenProps {
   onBack: () => void
 }
 
+const MOCK_FOOD_RECORDS = [
+  {
+    id: "1",
+    date: new Date(2024, 0, 15),
+    foods: [
+      {
+        id: "f1",
+        name: "떡볶이",
+        category: "한식",
+        photoUrl: "/spicy-tteokbokki.png",
+        memo: "정말 맛있었어요!",
+      },
+      {
+        id: "f2",
+        name: "김밥",
+        category: "한식",
+        photoUrl: "/colorful-kimbap.png",
+      },
+    ],
+  },
+  {
+    id: "2",
+    date: new Date(2024, 0, 16),
+    foods: [
+      {
+        id: "f3",
+        name: "라면",
+        category: "한식",
+        photoUrl: "/steaming-bowl-of-ramen.png",
+        memo: "야식으로 먹음",
+      },
+    ],
+  },
+  {
+    id: "3",
+    date: new Date(2024, 0, 18),
+    foods: [
+      {
+        id: "f4",
+        name: "초밥",
+        category: "일식",
+        photoUrl: "/assorted-sushi-platter.png",
+      },
+    ],
+  },
+]
+
 export default function DiaryScreen({ onBack }: DiaryScreenProps) {
-  const { records, mockFoods } = useFoodRecords()
-  const [selectedCategory, setSelectedCategory] = useState<string>("all")
-  const categories = ["all", "한식", "일식", "중식", "양식"]
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedFood, setSelectedFood] = useState<any>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
 
-  const collectedFoods = new Set(records.map((r) => r.food.id))
-  const filteredFoods =
-    selectedCategory === "all" ? mockFoods : mockFoods.filter((f) => f.category === selectedCategory)
+  const markedDates = MOCK_FOOD_RECORDS.map((r) => r.date)
+  const selectedDayRecords = selectedDate
+    ? MOCK_FOOD_RECORDS.find(
+        (r) =>
+          r.date.getFullYear() === selectedDate.getFullYear() &&
+          r.date.getMonth() === selectedDate.getMonth() &&
+          r.date.getDate() === selectedDate.getDate(),
+      )?.foods || []
+    : []
 
-  const stats = {
-    total: mockFoods.length,
-    collected: collectedFoods.size,
+  const handleFoodClick = (food: any) => {
+    setSelectedFood({
+      ...food,
+      date: selectedDate?.toLocaleDateString("ko-KR"),
+    })
+    setIsDetailOpen(true)
   }
 
   return (
     <div className="max-w-2xl mx-auto p-4 py-10 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">음식 도감</h1>
+        <h1 className="text-2xl font-bold text-gray-900">음식 도감</h1>
         <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
           <ChevronUp size={24} />
         </button>
       </div>
 
-      {/* 통계 */}
-      <div className="bg-gradient-to-r from-primary to-accent rounded-2xl p-6 text-white shadow-md">
-        <div className="text-center mb-4">
-          <p className="text-sm opacity-90">수집 진행도</p>
-          <p className="text-4xl font-bold">
-            {stats.collected}/{stats.total}
-          </p>
-        </div>
-        <div className="w-full bg-white/30 rounded-full h-3 overflow-hidden">
-          <div
-            className="bg-white h-full transition-all duration-500"
-            style={{ width: `${(stats.collected / stats.total) * 100}%` }}
-          />
-        </div>
-      </div>
+      {/* 캘린더 */}
+      <Calendar markedDates={markedDates} onDateClick={setSelectedDate} selectedDate={selectedDate} />
 
-      {/* 카테고리 필터 */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors ${
-              selectedCategory === cat ? "bg-primary text-white" : "bg-muted text-foreground hover:bg-muted/80"
-            }`}
-          >
-            {cat === "all" ? "전체" : cat}
-          </button>
-        ))}
-      </div>
+      {/* 선택된 날짜의 음식 목록 */}
+      {selectedDate && (
+        <div className="bg-white rounded-xl p-4 shadow-md">
+          <h2 className="font-bold text-gray-900 mb-4">{selectedDate.toLocaleDateString("ko-KR")} 기록</h2>
 
-      {/* 음식 그리드 */}
-      <div className="grid grid-cols-3 gap-4">
-        {filteredFoods.map((food) => {
-          const isCollected = collectedFoods.has(food.id)
-          const count = records.filter((r) => r.food.id === food.id).length
-
-          return (
-            <div
-              key={food.id}
-              className={`rounded-xl p-4 text-center transition-all ${
-                isCollected ? "bg-white shadow-md" : "bg-muted/50 opacity-50"
-              }`}
-            >
-              <div className={`text-4xl mb-2 transition-transform ${isCollected ? "scale-100" : "scale-50"}`}>
-                {isCollected ? food.emoji : "?"}
-              </div>
-              <h3 className="font-semibold text-sm text-foreground mb-1">{isCollected ? food.name : "?"}</h3>
-              {isCollected && <p className="text-xs text-muted-foreground">{count}회 수집</p>}
+          {selectedDayRecords.length > 0 ? (
+            <div className="space-y-3">
+              {selectedDayRecords.map((food) => (
+                <button
+                  key={food.id}
+                  onClick={() => handleFoodClick(food)}
+                  className="w-full flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left"
+                >
+                  {food.photoUrl && (
+                    <img
+                      src={food.photoUrl || "/placeholder.svg"}
+                      alt={food.name}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">{food.name}</p>
+                    <p className="text-xs text-gray-600">{food.category}</p>
+                  </div>
+                  <span className="text-gray-400">›</span>
+                </button>
+              ))}
             </div>
-          )
-        })}
-      </div>
-
-      {/* 기록 목록 */}
-      {records.length > 0 && (
-        <div className="bg-white rounded-2xl p-6 shadow-md">
-          <h2 className="text-lg font-bold text-foreground mb-4">최근 기록</h2>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
-            {records.slice(0, 10).map((record) => (
-              <div key={record.id} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                <span className="text-2xl">{record.food.emoji}</span>
-                <div className="flex-1">
-                  <p className="font-semibold text-foreground">{record.food.name}</p>
-                  <p className="text-xs text-muted-foreground">{record.timestamp.toLocaleDateString()}</p>
-                </div>
-                {record.photoUrl && <span className="text-xs text-primary">📸</span>}
-              </div>
-            ))}
-          </div>
+          ) : (
+            <p className="text-center text-gray-500 py-8">이 날짜에 기록된 음식이 없습니다.</p>
+          )}
         </div>
       )}
+
+      {/* 음식 상세 모달 */}
+      <FoodDetailModal isOpen={isDetailOpen} onClose={() => setIsDetailOpen(false)} food={selectedFood} />
     </div>
   )
 }

@@ -1,40 +1,34 @@
-const CHARACTERS = {
-  1: "🥚",
-  2: "🐣",
-  3: "🐥",
-  4: "🐔",
-  5: "🦅",
-  6: "🦉",
-  7: "🦜",
-  8: "🦚",
-  9: "👑",
-  10: "⭐",
-}
-
 interface CharacterDisplayProps {
   level: number
   satiety: number
+  message?: string
+  emoji?: string
 }
 
-export default function CharacterDisplay({ level, satiety }: CharacterDisplayProps) {
-  const emoji = CHARACTERS[Math.min(level, 10) as keyof typeof CHARACTERS] || "🐔"
-
-  // 포만감에 따른 표정 표현
-  const getExpression = () => {
-    if (satiety > 70) return "😊"
-    if (satiety > 40) return "🙂"
-    if (satiety > 20) return "😐"
-    return "😢"
-  }
-
+export default function CharacterDisplay({
+  level,
+  satiety,
+  message = "오늘 뭐 먹을지 고민이야?",
+  emoji = "😋",
+}: CharacterDisplayProps) {
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="text-8xl character-animation">{emoji}</div>
-      <div className="text-6xl">{getExpression()}</div>
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-foreground mb-1">Lv. {level}</h2>
-        <p className="text-muted-foreground">밥토리</p>
+    <div className="relative w-full text-center mb-4">
+      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-sky-100 text-sky-700 px-4 py-2 rounded-full shadow-md bap-tory-talk-bubble whitespace-nowrap z-10">
+        <p className="text-sm">{message}</p>
       </div>
+      <div className="w-40 h-40 mx-auto bg-gradient-to-br from-amber-300 to-orange-400 rounded-full flex items-center justify-center shadow-inner mt-4 character-animation">
+        <span className={`text-7xl transition-transform duration-500 ${emoji === "🥰" ? "scale-125" : ""}`}>
+          {emoji}
+        </span>
+      </div>
+      <h2 className="text-2xl font-bold mt-4">밥토리 (Lv. {level})</h2>
+      <div className="w-full bg-gray-200 rounded-full h-4 mt-2 overflow-hidden">
+        <div
+          className="bg-gradient-to-r from-green-400 to-blue-500 h-4 rounded-full transition-all duration-1000"
+          style={{ width: "45%" }}
+        ></div>
+      </div>
+      <p className="text-sm text-gray-500 mt-1">EXP: 450 / 1000</p>
     </div>
   )
 }

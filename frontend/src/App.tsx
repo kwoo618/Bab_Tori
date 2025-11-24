@@ -1,12 +1,66 @@
+"use client"
+
+import { useState } from "react"
+import Header from "./components/Header"
+import CharacterSection from "./components/CharacterSection"
+import RecommendationSection from "./components/RecommendationSection"
+import InteractionSection from "./components/InteractionSection"
+import BottomNavigation from "./components/BottomNavigation"
+import CollectionModal from "./components/CollectionModal"
+import ChatModal from "./components/ChatModal"
 import MainScreen from "./pages/MainScreen"
 import RecommendationScreen from "./pages/RecommendationScreen"
-import UploadScreen from "./pages/UploadScreen"
 import DiaryScreen from "./pages/DiaryScreen"
-import PlacesScreen from "./pages/PlacesScreen"
-import ChatbotScreen from "./pages/ChatbotScreen"
 import Navigation from "./components/Navigation"
 
 export default function App() {
+  const [showCharacter, setShowCharacter] = useState(true)
+  const [showRecommendation, setShowRecommendation] = useState(true)
+  const [showInteraction, setShowInteraction] = useState(false)
+  const [showBottomNav, setShowBottomNav] = useState(false)
+  const [selectedFood, setSelectedFood] = useState("")
+
+  const [showCollection, setShowCollection] = useState(false)
+  const [showChat, setShowChat] = useState(false)
+
+  const [status, setStatus] = useState({
+    hunger: 80,
+    happiness: 60,
+    fatigue: 30,
+    friendship: 75,
+  })
+  const [message, setMessage] = useState("오늘 뭐 먹을지 고민이야?")
+  const [emoji, setEmoji] = useState("😋")
+
+  const handleFoodSelect = (foodName: string) => {
+    setSelectedFood(foodName)
+    setMessage(`${foodName} 좋아! 맛있게 먹어!`)
+    setEmoji("🥰")
+
+    // 상태 업데이트
+    setStatus((prev) => ({
+      hunger: Math.max(0, prev.hunger - 30),
+      happiness: Math.min(100, prev.happiness + 20),
+      fatigue: Math.max(0, prev.fatigue - 10),
+      friendship: prev.friendship,
+    }))
+
+    // 섹션 전환
+    setShowCharacter(false)
+    setShowRecommendation(false)
+    setShowInteraction(true)
+    setShowBottomNav(true)
+  }
+
+  const handleBack = () => {
+    setShowCharacter(true)
+    setShowRecommendation(true)
+    setShowInteraction(false)
+    setShowBottomNav(false)
+    setMessage("오늘 뭐 먹을지 고민이야?")
+    setEmoji("😋")
+  }
+
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id)
     if (element) {
@@ -15,32 +69,45 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50 pb-24">
-      <main className="max-w-2xl mx-auto">
-        <section id="home">
-          <MainScreen onRecommend={() => scrollToSection("recommend")} />
-        </section>
+    <div className="app-container w-full max-w-md mx-auto bg-white shadow-xl">
+      <Header />
 
-        <section id="recommend" className="border-t border-gray-200/50">
-          <RecommendationScreen onBack={() => scrollToSection("home")} />
-        </section>
+      <main className="flex-grow overflow-y-auto">
+        <div className="p-4 space-y-6">
+          <section id="home">
+            {showCharacter && (
+              <CharacterSection
+                status={status}
+                message={message}
+                emoji={emoji}
+                onOpenCollection={() => setShowCollection(true)}
+              />
+            )}
 
-        <section id="upload" className="border-t border-gray-200/50">
-          <UploadScreen onBack={() => scrollToSection("home")} />
-        </section>
+            {showRecommendation && (
+              <RecommendationSection onFoodSelect={handleFoodSelect} onOpenChat={() => setShowChat(true)} />
+            )}
 
-        <section id="diary" className="border-t border-gray-200/50">
-          <DiaryScreen onBack={() => scrollToSection("home")} />
-        </section>
+            {showInteraction && <InteractionSection selectedFood={selectedFood} onBack={handleBack} />}
+            <MainScreen onRecommend={() => scrollToSection("recommend")} />
+          </section>
 
-        <section id="places" className="border-t border-gray-200/50">
-          <PlacesScreen onBack={() => scrollToSection("home")} />
-        </section>
+          <section id="recommend" className="mt-8">
+            <RecommendationScreen onBack={() => scrollToSection("home")} />
+          </section>
 
-        <section id="chat" className="border-t border-gray-200/50">
-          <ChatbotScreen onBack={() => scrollToSection("home")} />
-        </section>
+          <section id="diary" className="mt-8">
+            <DiaryScreen onBack={() => scrollToSection("home")} />
+          </section>
+        </div>
       </main>
+
+      {showBottomNav && <BottomNavigation />}
+
+      {showCollection && <CollectionModal onClose={() => setShowCollection(false)} />}
+
+      {showChat && <ChatModal onClose={() => setShowChat(false)} />}
+
       <Navigation onNavigate={scrollToSection} />
     </div>
   )
