@@ -8,7 +8,6 @@ import InteractionSection from "./components/InteractionSection"
 import BottomNavigation from "./components/BottomNavigation"
 import CollectionModal from "./components/CollectionModal"
 import ChatModal from "./components/ChatModal"
-import RecommendationScreen from "./pages/RecommendationScreen"
 import DiaryScreen from "./pages/DiaryScreen"
 import Navigation from "./components/Navigation"
 import FoodInputModal, { type FoodInputData } from "./components/FoodInputModal"
@@ -95,11 +94,6 @@ export default function App() {
 
             {showInteraction && <InteractionSection selectedFood={selectedFood} onBack={handleBack} />}
           </section>
-
-          <section id="recommend" className="mt-8">
-            <RecommendationScreen onBack={() => scrollToSection("home")} />
-          </section>
-
           <section id="diary" className="mt-8">
             <DiaryScreen onBack={() => scrollToSection("home")} />
           </section>
