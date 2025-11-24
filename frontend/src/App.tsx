@@ -8,10 +8,10 @@ import InteractionSection from "./components/InteractionSection"
 import BottomNavigation from "./components/BottomNavigation"
 import CollectionModal from "./components/CollectionModal"
 import ChatModal from "./components/ChatModal"
-import MainScreen from "./pages/MainScreen"
 import RecommendationScreen from "./pages/RecommendationScreen"
 import DiaryScreen from "./pages/DiaryScreen"
 import Navigation from "./components/Navigation"
+import FoodInputModal, { type FoodInputData } from "./components/FoodInputModal"
 
 export default function App() {
   const [showCharacter, setShowCharacter] = useState(true)
@@ -51,7 +51,12 @@ export default function App() {
     setShowInteraction(true)
     setShowBottomNav(true)
   }
+  const [isFoodModalOpen, setIsFoodModalOpen] = useState(false)
 
+  const handleFoodSubmit = (data: FoodInputData) => {
+    console.log("음식 정보:", data)
+    setIsFoodModalOpen(false)
+  }
   const handleBack = () => {
     setShowCharacter(true)
     setShowRecommendation(true)
@@ -85,11 +90,10 @@ export default function App() {
             )}
 
             {showRecommendation && (
-              <RecommendationSection onFoodSelect={handleFoodSelect} onOpenChat={() => setShowChat(true)} />
+              <RecommendationSection onFoodSelect={handleFoodSelect} onOpenChat={() => setShowChat(true)} onOpenFoodModal={() => setIsFoodModalOpen(true)} />
             )}
 
             {showInteraction && <InteractionSection selectedFood={selectedFood} onBack={handleBack} />}
-            <MainScreen onRecommend={() => scrollToSection("recommend")} />
           </section>
 
           <section id="recommend" className="mt-8">
@@ -108,6 +112,11 @@ export default function App() {
 
       {showChat && <ChatModal onClose={() => setShowChat(false)} />}
 
+      <FoodInputModal
+        isOpen={isFoodModalOpen}
+        onClose={() => setIsFoodModalOpen(false)}
+        onSubmit={handleFoodSubmit}
+      />
       <Navigation onNavigate={scrollToSection} />
     </div>
   )

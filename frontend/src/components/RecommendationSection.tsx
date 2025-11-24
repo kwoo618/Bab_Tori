@@ -5,9 +5,10 @@ import { MessageCircle } from "lucide-react"
 interface RecommendationSectionProps {
   onFoodSelect: (foodName: string) => void
   onOpenChat: () => void
+  onOpenFoodModal: () => void  
 }
 
-export default function RecommendationSection({ onFoodSelect, onOpenChat }: RecommendationSectionProps) {
+export default function RecommendationSection({ onFoodSelect, onOpenChat, onOpenFoodModal, }: RecommendationSectionProps) {
   const recommendations = [
     {
       name: "김치찌개",
@@ -45,15 +46,24 @@ export default function RecommendationSection({ onFoodSelect, onOpenChat }: Reco
         <h3 className="text-xl font-bold flex items-center">
           <span className="mr-2">🍽️</span> 밥토리의 추천!
         </h3>
+      <div className="flex items-center gap-2">
         <button
-          onClick={onOpenChat}
+          type="button"
+          onClick={onOpenFoodModal}
           className="flex items-center gap-2 bg-sky-100 text-sky-700 px-3 py-2 rounded-full text-sm font-semibold hover:bg-sky-200 transition-colors shadow-sm"
         >
-          <MessageCircle className="w-4 h-4" />
-          <span>다른 메뉴?</span>
+          <span>음식 기록하기</span>
         </button>
+          <button
+            type="button"
+            onClick={onOpenChat}
+            className="flex items-center gap-2 bg-sky-100 text-sky-700 px-3 py-2 rounded-full text-sm font-semibold hover:bg-sky-200 transition-colors shadow-sm"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>다른 메뉴?</span>
+          </button>
+        </div>
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         {recommendations.map((food, index) => (
           <div
