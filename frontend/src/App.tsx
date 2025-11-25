@@ -11,6 +11,7 @@ import ChatModal from "./components/ChatModal"
 import DiaryScreen from "./pages/DiaryScreen"
 import Navigation from "./components/Navigation"
 import FoodInputModal, { type FoodInputData } from "./components/FoodInputModal"
+import UploadScreen from "./pages/UploadScreen"
 
 export default function App() {
   const [showCharacter, setShowCharacter] = useState(true)
@@ -51,10 +52,18 @@ export default function App() {
     setShowBottomNav(true)
   }
   const [isFoodModalOpen, setIsFoodModalOpen] = useState(false)
+  const [showUploadScreen, setShowUploadScreen] = useState(false) // 사진 인증 화면
+  const [foodFormData, setFoodFormData] = useState<FoodInputData | null>(null) // (선택 사항: 나중에 활용)
 
   const handleFoodSubmit = (data: FoodInputData) => {
-    console.log("음식 정보:", data)
-    setIsFoodModalOpen(false)
+  // 1) 폼에 적은 내용 잠깐 저장 (나중에 UploadScreen에서 활용할 수 있음)
+  setFoodFormData(data)
+
+  // 2) 음식 기록하기 모달 닫기
+  setIsFoodModalOpen(false)
+
+  // 3) 사진 인증 화면 열기
+  setShowUploadScreen(true)
   }
   const handleBack = () => {
     setShowCharacter(true)
@@ -111,6 +120,12 @@ export default function App() {
         onClose={() => setIsFoodModalOpen(false)}
         onSubmit={handleFoodSubmit}
       />
+
+      {showUploadScreen && (
+        <div className="fixed inset-0 bg-white z-[60] overflow-y-auto">
+          <UploadScreen onBack={() => setShowUploadScreen(false)} />
+        </div>
+      )}
       <Navigation onNavigate={scrollToSection} />
     </div>
   )
