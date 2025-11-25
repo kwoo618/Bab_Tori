@@ -19,7 +19,8 @@ export default function App() {
   const [showInteraction, setShowInteraction] = useState(false)
   const [showBottomNav, setShowBottomNav] = useState(false)
   const [selectedFood, setSelectedFood] = useState("")
-
+  const [interactionMode, setInteractionMode] = useState<"full" | "uploadOnly">("full")
+  const [hidePlaces, setHidePlaces] = useState(false)
   const [showCollection, setShowCollection] = useState(false)
   const [showChat, setShowChat] = useState(false)
 
@@ -36,6 +37,8 @@ export default function App() {
     setSelectedFood(foodName)
     setMessage(`${foodName} 좋아! 맛있게 먹어!`)
     setEmoji("🥰")
+    setHidePlaces(false)
+    setInteractionMode("full")
 
     // 상태 업데이트
     setStatus((prev) => ({
@@ -56,14 +59,10 @@ export default function App() {
   const [foodFormData, setFoodFormData] = useState<FoodInputData | null>(null) // (선택 사항: 나중에 활용)
 
   const handleFoodSubmit = (data: FoodInputData) => {
-  // 1) 폼에 적은 내용 잠깐 저장 (나중에 UploadScreen에서 활용할 수 있음)
-  setFoodFormData(data)
-
-  // 2) 음식 기록하기 모달 닫기
-  setIsFoodModalOpen(false)
-
-  // 3) 사진 인증 화면 열기
-  setShowUploadScreen(true)
+    setSelectedFood(data.foodName)
+    setIsFoodModalOpen(false)  
+    setHidePlaces(true)       
+    setShowInteraction(true)
   }
   const handleBack = () => {
     setShowCharacter(true)
@@ -101,7 +100,7 @@ export default function App() {
               <RecommendationSection onFoodSelect={handleFoodSelect} onOpenChat={() => setShowChat(true)} onOpenFoodModal={() => setIsFoodModalOpen(true)} />
             )}
 
-            {showInteraction && <InteractionSection selectedFood={selectedFood} onBack={handleBack} />}
+            {showInteraction && <InteractionSection selectedFood={selectedFood} onBack={handleBack} hidePlaces={hidePlaces}/>}
           </section>
           <section id="diary" className="mt-8">
             <DiaryScreen onBack={() => scrollToSection("home")} />
@@ -120,12 +119,6 @@ export default function App() {
         onClose={() => setIsFoodModalOpen(false)}
         onSubmit={handleFoodSubmit}
       />
-
-      {showUploadScreen && (
-        <div className="fixed inset-0 bg-white z-[60] overflow-y-auto">
-          <UploadScreen onBack={() => setShowUploadScreen(false)} />
-        </div>
-      )}
       <Navigation onNavigate={scrollToSection} />
     </div>
   )
