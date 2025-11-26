@@ -1,3 +1,11 @@
+export interface WeatherData {
+  temp: number
+  humidity: number
+  windSpeed: number
+  description: string
+  icon: string
+}
+
 export interface Character {
   id: string
   level: number

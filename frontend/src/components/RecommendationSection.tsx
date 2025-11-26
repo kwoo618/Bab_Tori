@@ -1,7 +1,7 @@
 "use client"
 
 import { MessageCircle } from "lucide-react"
-
+import { useWeather } from "../hooks/useWeather"
 interface RecommendationSectionProps {
   onFoodSelect: (foodName: string) => void
   onOpenChat: () => void
@@ -9,6 +9,7 @@ interface RecommendationSectionProps {
 }
 
 export default function RecommendationSection({ onFoodSelect, onOpenChat, onOpenFoodModal, }: RecommendationSectionProps) {
+  const { weather, loading, error } = useWeather()
   const recommendations = [
     {
       name: "김치찌개",
@@ -33,14 +34,29 @@ export default function RecommendationSection({ onFoodSelect, onOpenChat, onOpen
       {/* Weather Widget */}
       <div className="flex items-center justify-between mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm">
         <div>
-          <p className="text-sm text-gray-500 mb-1">현재 위치: 서울시 강남구</p>
-          <p className="font-bold text-lg text-gray-800">비 오는 날</p>
+          <p className="text-sm text-gray-500 mb-1">
+            현재 위치: {weather?.location ?? "불러오는 중..."}
+          </p>
+
+          <p className="font-bold text-lg text-gray-800">
+            {loading && "날씨 불러오는 중..."}
+            {error && !loading && "날씨 정보를 불러올 수 없어요"}
+            {!loading && !error && weather && weather.description}
+          </p>
         </div>
+
         <div className="text-right flex flex-col items-end">
-          <div className="text-4xl mb-1">🌧️</div>
-          <p className="text-sm font-semibold text-sky-600">19°C / 습도 85%</p>
+          <div className="text-4xl mb-1">
+            {weather?.icon ?? "☁️"}
+          </div>
+          <p className="text-sm font-semibold text-sky-600">
+            {weather
+              ? `${Math.round(weather.temp)}°C / 습도 ${weather.humidity}%`
+              : "–°C / 습도 –%"}
+          </p>
         </div>
       </div>
+
 
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold flex items-center">

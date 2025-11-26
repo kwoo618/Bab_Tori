@@ -12,6 +12,8 @@ import DiaryScreen from "./pages/DiaryScreen"
 import Navigation from "./components/Navigation"
 import FoodInputModal, { type FoodInputData } from "./components/FoodInputModal"
 import UploadScreen from "./pages/UploadScreen"
+import WeatherDisplay from "./components/WeatherDisplay"
+import { useWeather } from "./hooks/useWeather"
 
 export default function App() {
   const [showCharacter, setShowCharacter] = useState(true)
@@ -23,6 +25,7 @@ export default function App() {
   const [hidePlaces, setHidePlaces] = useState(false)
   const [showCollection, setShowCollection] = useState(false)
   const [showChat, setShowChat] = useState(false)
+  const { weather, loading, error } = useWeather()
 
   const [status, setStatus] = useState({
     hunger: 80,
