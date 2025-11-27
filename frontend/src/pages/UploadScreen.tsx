@@ -1,56 +1,94 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useFoodRecords } from "../hooks/useFoodRecords"
-import { useCharacter } from "../hooks/useCharacter"
 import { Upload, ChevronUp } from "lucide-react"
+import { api } from "../lib/api" 
 
 interface UploadScreenProps {
   onBack: () => void
 }
 
+interface FoodSelectResponse {
+  message: string
+  character_emoji: string
+  rewards: {
+    satiety_gain: number
+    friendship_gain: number
+    exp_gain: number
+  }
+  character: any // 나중에 필요하면 Character 타입으로 세부 정의해도 됨
+  level_up: boolean
+}
+
 export default function UploadScreen({ onBack }: UploadScreenProps) {
-  const { addRecord, mockFoods } = useFoodRecords()
-  const { updateStats } = useCharacter()
+  const { mockFoods } = useFoodRecords()  // ✅ addRecord 말고 mockFoods만 사용
   const [selectedFood, setSelectedFood] = useState<string | null>(null)
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const [uploadFile, setUploadFile] = useState<File | null>(null)   // ✅ 실제 파일 보관
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationResult, setVerificationResult] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)           // ✅ 에러 메시지
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        setUploadedImage(event.target?.result as string)
+      if (file) {
+        setUploadFile(file)  // ✅ 실제 파일 저장
+
+        const reader = new FileReader()
+        reader.onload = (event) => {
+        setUploadedImage(event.target?.result as string) // 미리보기용
       }
       reader.readAsDataURL(file)
     }
   }
 
-  const handleVerify = () => {
-    if (!uploadedImage || !selectedFood) return
+  const handleVerify = async () => {
+    if (!uploadFile || !selectedFood) return
+
+    const food = mockFoods.find((f) => f.id === selectedFood)
+    if (!food) return
 
     setIsVerifying(true)
-    // 실제 AI 인식은 백엔드에서 처리
-    setTimeout(() => {
-      const food = mockFoods.find((f) => f.id === selectedFood)
-      if (food) {
-        const record = addRecord(food, uploadedImage)
-        updateStats(record.satietyGain, record.friendshipGain, record.expGain)
+    setError(null)
 
-        setVerificationResult({
-          success: true,
-          food: food.name,
-          confidence: 92,
-          satietyGain: record.satietyGain,
-          friendshipGain: record.friendshipGain,
-          expGain: record.expGain,
-        })
-      }
+    try {
+      // ✅ 쿼리 파라미터 (텍스트 값들)
+      const params = new URLSearchParams()
+      params.set("user_id", "default_user")
+      params.set("food_name", food.name)
+      params.set("is_recommended", String(food.isRecommended)) // true/false
+      // lat, lon은 백엔드 기본값 쓰면 되면 생략 가능 (대구)
+
+      // ✅ 사진 파일 담기
+      const formData = new FormData()
+      formData.append("photo", uploadFile)
+
+      // ✅ 백엔드로 요청
+      const res = await api.postForm<FoodSelectResponse>(
+        `/food/select?${params.toString()}`,
+        formData,
+      )
+
+      // ✅ 응답으로 보상 정보 사용
+      setVerificationResult({
+        success: true,
+        food: food.name,
+        confidence: 92, // 지금은 그냥 고정/랜덤 값으로 두고,
+        satietyGain: res.rewards.satiety_gain,
+        friendshipGain: res.rewards.friendship_gain,
+        expGain: res.rewards.exp_gain,
+        message: res.message,
+        levelUp: res.level_up,
+      })
+    } catch (err) {
+      console.error(err)
+      setError("사진 인증 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.")
+    } finally {
       setIsVerifying(false)
-    }, 2000)
+    }
   }
 
   if (verificationResult) {
@@ -107,31 +145,38 @@ export default function UploadScreen({ onBack }: UploadScreenProps) {
 
       {/* 사진 업로드 영역 */}
       <div className="bg-white rounded-2xl p-8 shadow-md">
-        <label className="block">
-          <div
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-              uploadedImage ? "border-primary bg-primary/5" : "border-muted hover:border-primary"
-            }`}
-          >
-            {uploadedImage ? (
-              <div>
-                <img
-                  src={uploadedImage || "/placeholder.svg"}
-                  alt="uploaded"
-                  className="w-full max-h-64 object-cover rounded-lg mb-3"
-                />
-                <p className="text-sm text-muted-foreground">클릭하여 다시 선택</p>
-              </div>
-            ) : (
-              <div>
-                <Upload size={32} className="mx-auto mb-3 text-muted-foreground" />
+        <div
+          onClick={() => fileInputRef.current?.click()}   // ✅ 클릭 시 파일 선택창 열기
+          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+            uploadedImage ? "border-primary bg-primary/5" : "border-muted hover:border-primary"
+          }`}
+        >
+          {uploadedImage ? (
+            <div>
+              <img
+                src={uploadedImage || "/placeholder.svg"}
+                alt="uploaded"
+                className="w-full max-h-64 object-cover rounded-lg mb-3"
+              />
+              <p className="text-sm text-muted-foreground">클릭하여 다시 선택</p>
+            </div>
+          ) : (
+            <div>
+              <Upload size={32} className="mx-auto mb-3 text-muted-foreground" />
                 <p className="font-semibold text-foreground mb-1">사진을 업로드하세요</p>
                 <p className="text-sm text-muted-foreground">드래그하거나 클릭</p>
-              </div>
-            )}
-          </div>
-          <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-        </label>
+            </div>
+          )}
+        </div>
+
+        {/* ✅ 진짜 파일 인풋: 화면에서는 안 보이지만 ref로 클릭 */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+        />
       </div>
 
       {/* 음식 선택 */}
@@ -158,11 +203,16 @@ export default function UploadScreen({ onBack }: UploadScreenProps) {
           {/* 인증 버튼 */}
           <button
             onClick={handleVerify}
-            disabled={!selectedFood || isVerifying}
+            disabled={!selectedFood || !uploadFile || isVerifying}
             className="w-full bg-gradient-to-r from-primary to-accent text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {isVerifying ? "인증 중..." : "사진 인증하기"}
           </button>
+          {error && (
+            <p className="mt-2 text-sm text-red-500">
+            {error}
+            </p>
+          )}
         </>
       )}
     </div>

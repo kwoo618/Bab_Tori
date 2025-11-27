@@ -25,4 +25,11 @@ export const api = {
       body: JSON.stringify(body),
     })
   },
+    // ✅ 사진/파일 업로드용
+  postForm<T>(path: string, formData: FormData) {
+    return request<T>(path, {
+      method: "POST",
+      body: formData, // Content-Type은 브라우저가 자동으로 설정
+    })
+  },
 }
