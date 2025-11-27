@@ -6,7 +6,7 @@
 from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 import uvicorn
 
@@ -127,7 +127,13 @@ def get_character_state(user_id: str = "default_user", db: Session = Depends(get
     # 포만감 자동 감소 계산 (시간 경과)
     if character.last_update_time:
         now = datetime.now()
-        time_diff = now - character.last_update_time
+        last_update_time = character.last_update_time
+
+        # ✅ 둘 다 tz정보를 제거해서 같은 타입으로 맞춰주기
+        now_naive = now.replace(tzinfo=None)
+        last_naive = last_update_time.replace(tzinfo=None)
+
+        time_diff = now_naive - last_naive
         hours_passed = time_diff.total_seconds() / 3600
         
         # 1시간당 10% 감소
@@ -137,7 +143,6 @@ def get_character_state(user_id: str = "default_user", db: Session = Depends(get
         db.commit()
     
     return character.to_dict()
-
 
 @app.post("/character/update")
 def update_character_state(
