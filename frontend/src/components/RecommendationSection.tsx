@@ -2,6 +2,9 @@
 
 import { MessageCircle } from "lucide-react"
 import { useWeather } from "../hooks/useWeather"
+import { useRecommendations } from "../hooks/useRecommendations"  // ✅ 추가
+import type { Food } from "../types"
+
 interface RecommendationSectionProps {
   onFoodSelect: (foodName: string) => void
   onOpenChat: () => void
@@ -9,25 +12,8 @@ interface RecommendationSectionProps {
 }
 
 export default function RecommendationSection({ onFoodSelect, onOpenChat, onOpenFoodModal, }: RecommendationSectionProps) {
-  const { weather, loading, error } = useWeather()
-  const recommendations = [
-    {
-      name: "김치찌개",
-      reason: "얼큰함으로 추위를 날려요!",
-      img: "https://placehold.co/200x150/f87171/ffffff?text=김치찌개",
-    },
-    {
-      name: "해물파전",
-      reason: "비 오는 날엔 역시 파전이죠!",
-      img: "https://placehold.co/200x150/fbbf24/ffffff?text=해물파전",
-    },
-    {
-      name: "따끈한 칼국수",
-      reason: "속이 든든해져요.",
-      img: "https://placehold.co/200x150/34d399/ffffff?text=칼국수",
-    },
-    { name: "수제비", reason: "쫀득한 식감이 일품!", img: "https://placehold.co/200x150/60a5fa/ffffff?text=수제비" },
-  ]
+  const { weather,loading: weatherLoading,error: weatherError,} = useWeather()
+  const {foods,loading: recLoading,error: recError,} = useRecommendations()
 
   return (
     <section id="recommendation-section" className="mt-8">
@@ -39,9 +25,9 @@ export default function RecommendationSection({ onFoodSelect, onOpenChat, onOpen
           </p>
 
           <p className="font-bold text-lg text-gray-800">
-            {loading && "날씨 불러오는 중..."}
-            {error && !loading && "날씨 정보를 불러올 수 없어요"}
-            {!loading && !error && weather && weather.description}
+            {weatherLoading && "날씨 불러오는 중..."}
+            {weatherError && !weatherLoading && "날씨 정보를 불러올 수 없어요"}
+            {!weatherLoading && !weatherError && weather && weather.description}
           </p>
         </div>
 
@@ -56,7 +42,6 @@ export default function RecommendationSection({ onFoodSelect, onOpenChat, onOpen
           </p>
         </div>
       </div>
-
 
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold flex items-center">
@@ -80,22 +65,35 @@ export default function RecommendationSection({ onFoodSelect, onOpenChat, onOpen
           </button>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        {recommendations.map((food, index) => (
+
+      {/* 추천 로딩/에러 상태 */}
+      {recLoading && (
+        <p className="text-sm text-gray-500 mb-2">추천 불러오는 중...</p>
+      )}
+
+      {recError && !recLoading && (
+        <p className="text-sm text-red-500 mb-2">{recError}</p>
+      )}
+            <div className="grid grid-cols-2 gap-4">
+        {!recLoading && !recError && foods.map((food, index) => (
           <div
-            key={index}
+            key={food.id ?? index}
             className="food-card border border-gray-100 bg-white rounded-xl p-3 text-center shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col justify-between hover:scale-[1.02]"
           >
             <div onClick={() => onFoodSelect(food.name)}>
               <div className="overflow-hidden rounded-lg mb-3">
                 <img
-                  src={food.img || "/placeholder.svg"}
+                  src="/placeholder.svg"
                   alt={food.name}
                   className="w-full h-24 object-cover transform hover:scale-110 transition-transform duration-500"
                 />
               </div>
-              <h4 className="font-bold text-base text-gray-800 mb-1">{food.name}</h4>
-              <p className="text-xs text-gray-500 mb-3 line-clamp-2">{food.reason}</p>
+              <h4 className="font-bold text-base text-gray-800 mb-1">
+                {food.name}
+              </h4>
+              <p className="text-xs text-gray-500 mb-3 line-clamp-2">
+                {food.description}
+              </p>
             </div>
             <button
               onClick={() => onFoodSelect(food.name)}

@@ -1,4 +1,5 @@
 export interface WeatherData {
+  location: string
   temp: number
   humidity: number
   windSpeed: number
