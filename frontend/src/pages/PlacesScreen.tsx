@@ -2,71 +2,84 @@
 
 import { useState } from "react"
 import { ChevronUp, MapPin } from "lucide-react"
+import KakaoMap from "../components/KakaoMap"
+import { usePlaces, type Place } from "../hooks/usePlaces"
 
 interface PlacesScreenProps {
   onBack: () => void
 }
 
-// 샘플 맛집 데이터 (협업자가 DB 연동 시 교체)
-const MOCK_PLACES = [
-  {
-    id: 1,
-    name: "맛있는 불고기",
-    category: "한식",
-    emoji: "🍖",
-    rating: 4.8,
-    distance: "0.3km",
-    address: "서울 종로구",
-  },
-  {
-    id: 2,
-    name: "신라면 뜨거운집",
-    category: "한식",
-    emoji: "🍜",
-    rating: 4.5,
-    distance: "0.5km",
-    address: "서울 종로구",
-  },
-  {
-    id: 3,
-    name: "신선한 초밥",
-    category: "일식",
-    emoji: "🍣",
-    rating: 4.9,
-    distance: "0.4km",
-    address: "서울 중구",
-  },
-]
-
 export default function PlacesScreen({ onBack }: PlacesScreenProps) {
-  const [selectedPlace, setSelectedPlace] = useState<(typeof MOCK_PLACES)[0] | null>(null)
+  // TODO: 실제 위치 정보/선택된 음식과 연동 (지금은 예시 좌표)
+  const [lat] = useState(35.8714)      // 예시: 대구 위도
+  const [lon] = useState(128.6014)     // 예시: 대구 경도
+  const foodName = "맛집"              // 나중에 추천된 음식 이름이랑 연결하면 됨
+
+  const { places, loading, error } = usePlaces(foodName, lat, lon)
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
+
+  const handleSelectPlace = (place: Place) => {
+    setSelectedPlace(place)
+    // 나중에 여기서 지도 중심 이동 같은 것도 연동 가능
+  }
 
   return (
     <div className="p-4 py-10 space-y-6 min-h-[80vh]">
+      {/* 상단 헤더 */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <MapPin className="text-primary" />
           맛집 찾기
         </h1>
-        <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
+        <button
+          onClick={onBack}
+          className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
+        >
           <ChevronUp size={24} />
         </button>
       </div>
 
-      {/* 카카오맵 영역 (협업자 구현) */}
-      <div className="w-full h-64 bg-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-500 border-2 border-dashed border-gray-300">
-        <MapPin size={48} className="mb-2 opacity-50" />
-        <p className="font-semibold">지도 영역 (카카오맵)</p>
-        <p className="text-xs mt-1">협업자가 API 연동 예정</p>
+      {/* ✅ 카카오맵 영역 */}
+      <div className="space-y-2">
+        <h3 className="font-bold text-lg">지도</h3>
+        {loading && (
+          <p className="text-sm text-muted-foreground">
+            주변 맛집 지도 불러오는 중...
+          </p>
+        )}
+        {error && (
+          <p className="text-sm text-red-500">
+            {error}
+          </p>
+        )}
+
+        <KakaoMap
+          center={{ lat, lon }}
+          places={places}
+        />
       </div>
 
-      {/* 맛집 리스트 */}
+      {/* ✅ 맛집 리스트 (백엔드 /places 데이터 사용) */}
       <div className="space-y-3">
         <h3 className="font-bold text-lg">내 주변 맛집</h3>
-        {MOCK_PLACES.map((place) => (
-          <div
+
+        {loading && (
+          <p className="text-sm text-muted-foreground">
+            맛집 목록 불러오는 중...
+          </p>
+        )}
+
+        {!loading && places.length === 0 && !error && (
+          <p className="text-sm text-muted-foreground">
+            주변에서 맛집을 찾지 못했어요 😢
+          </p>
+        )}
+
+        {places.map((place) => (
+          <button
             key={place.id}
-            onClick={() => setSelectedPlace(place)}
+            type="button"
+            onClick={() => handleSelectPlace(place)}
             className={`w-full p-4 rounded-xl text-left transition-all cursor-pointer border ${
               selectedPlace?.id === place.id
                 ? "bg-primary/5 border-primary shadow-sm"
@@ -74,16 +87,28 @@ export default function PlacesScreen({ onBack }: PlacesScreenProps) {
             }`}
           >
             <div className="flex items-start gap-3">
-              <span className="text-3xl bg-gray-100 p-2 rounded-lg">{place.emoji}</span>
+              {/* 이모지는 아직 API에 없어서 고정 아이콘 사용 */}
+              <span className="text-3xl bg-gray-100 p-2 rounded-lg">
+                🍽️
+              </span>
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">{place.name}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {place.category} · {place.distance}
+                  {(place.roadAddress || place.address) ?? "주소 정보 없음"}
                 </p>
-                <div className="flex items-center gap-1 mt-1 text-amber-500 font-medium">⭐ {place.rating}</div>
+                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                  {typeof place.distance_m === "number" && (
+                    <span>
+                      {place.distance_m < 1000
+                        ? `${place.distance_m}m`
+                        : `${(place.distance_m / 1000).toFixed(1)}km`}
+                    </span>
+                  )}
+                  {place.phone && <span>· {place.phone}</span>}
+                </div>
               </div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>
