@@ -39,7 +39,9 @@ export default function InteractionSection({
   onBack,
   hidePlaces = false,
 }: InteractionSectionProps) {
-  const [activeTab, setActiveTab] = useState<"map" | "upload">("map")
+  const [activeTab, setActiveTab] = useState<"map" | "upload">(
+    hidePlaces ? "upload" : "map",
+  )
 
   // ✅ 사진 인증용 상태들
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -124,21 +126,27 @@ export default function InteractionSection({
           <ArrowLeft className="w-6 h-6" />
         </button>
         <h4 className="font-bold text-center flex-1 text-lg">
-          {activeTab === "upload" ? "오늘 먹은 음식 인증하기" : "선택한 메뉴 주변 맛집!"}
+          {hidePlaces || activeTab === "upload"
+            ? "오늘 먹은 음식 인증하기"
+            : "선택한 메뉴 주변 맛집!"}
         </h4>
       </div>
 
       <div className="p-4 min-h-[300px]">
         {/* 탭 컨트롤 */}
         <div className="flex mb-4 bg-gray-100 p-1 rounded-lg">
-          <button
-            onClick={() => setActiveTab("map")}
-            className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-              activeTab === "map" ? "bg-white shadow text-sky-600" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            맛집 찾기
-          </button>
+          {!hidePlaces && (
+            <button
+              onClick={() => setActiveTab("map")}
+              className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
+                activeTab === "map"
+                  ? "bg-white shadow text-sky-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              맛집 찾기
+            </button>
+          )}
 
           <button
             onClick={() => setActiveTab("upload")}
@@ -153,7 +161,7 @@ export default function InteractionSection({
         </div>
 
         {/* Map Content */}
-        {activeTab === "map" && (
+        {!hidePlaces && activeTab === "map" && (
           <div className="animate-in fade-in duration-300 space-y-4">
             {/* ✅ 실제 카카오맵 */}
             <div className="relative">
