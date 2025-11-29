@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import type { WeatherData } from "../types"
+import { useGeolocation } from "./useGeolocation"
 import { api } from "../lib/api"
 
 interface WeatherApiResponse {
@@ -13,22 +14,28 @@ interface WeatherApiResponse {
   // feels_like 등은 지금 안 써서 생략
 }
 
-export function useWeather(lat?: number, lon?: number) {
+export function useWeather() {
+  const { location, loading: locationLoading, error: locationError } = useGeolocation()
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (typeof lat !== "number" || typeof lon !== "number") {
+    if (locationLoading) return // 위치 정보 로딩 중이면 대기
+
+    if (locationError || !location) {
+      setError(locationError || "위치 정보를 가져올 수 없어 날씨를 조회할 수 없습니다.")
+      setLoading(false)
       return
     }
+
     async function fetchWeather() {
       try {
         setLoading(true)
         setError(null)
 
         // FastAPI /weather 에 현재 위치 전달
-        const data = await api.get<WeatherApiResponse>(`/weather?lat=${lat}&lon=${lon}`)
+        const data = await api.get<WeatherApiResponse>(`/weather?lat=${location.lat}&lon=${location.lon}`)
 
         // 날씨 상태에 따라 이모지 매핑
         let icon = "☀️"
@@ -65,7 +72,7 @@ export function useWeather(lat?: number, lon?: number) {
     }
 
     fetchWeather()
-  }, [lat, lon])
+  }, [location, locationLoading, locationError])
 
-  return { weather, loading, error }
+  return { weather, loading: loading || locationLoading, error }
 }

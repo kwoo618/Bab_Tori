@@ -46,7 +46,7 @@ export function usePlaces(foodName: string | null, lat?: number, lon?: number) {
 
       try {
         const resp = await api.get<PlacesResponse>(
-          `/places?query=${encodeURIComponent(foodName)}&lat=${lat}&lon=${lon}&radius=1000`
+          `/places?keyword=${encodeURIComponent(foodName)}&lat=${lat}&lon=${lon}&radius=1000`
         )
 
         const mapped: Place[] = resp.places.map((p, idx) => ({

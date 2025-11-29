@@ -29,10 +29,10 @@ export function useRecommendations() {
   const [error, setError] = useState<string | null>(null)
 
   const { location, loading: locationLoading } = useGeolocation()
-  const { weather, loading: weatherLoading, error: weatherError } = useWeather(location?.lat, location?.lon) // location이 있으면 날씨를 가져옴
+  const { weather, loading: weatherLoading, error: weatherError } = useWeather() // 이제 인자 없이 호출
 
   useEffect(() => {
-    if (locationLoading || weatherLoading) return // 위치와 날씨 정보를 가져올 때까지 대기
+    if (locationLoading) return // 위치 정보를 가져올 때까지 대기
 
     async function fetchRecommendations() {
       try {
@@ -65,7 +65,7 @@ export function useRecommendations() {
     }
 
     fetchRecommendations()
-  }, [location, locationLoading, weatherLoading]) // location이 변경되면 추천을 다시 가져옴
+  }, [location]) // location이 변경되면 추천을 다시 가져옴
 
   return { foods, weather, loading: loading || locationLoading || weatherLoading, error: error || weatherError }
 }
