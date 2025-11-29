@@ -5,14 +5,17 @@
 
 from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional
+from pydantic import BaseModel
 import uvicorn
 
 # 로컬 모듈
 from database import engine, get_db, Base
 from models import CharacterState, FoodRecord
+from chatbot import with_message_history
 from weather_service import fetch_weather
 from kakao_service import search_places
 from recommendation_system import recommend_4_foods
@@ -326,6 +329,41 @@ async def select_food(
         "character": character.to_dict(),
         "level_up": level_up
     }
+
+
+# ============================================
+# 챗봇 API
+# ============================================
+
+class ChatRequest(BaseModel):
+    """챗봇 요청 모델"""
+    session_id: str
+    message: str
+
+@app.post("/chat")
+async def chat_with_bot(request: ChatRequest):
+    """
+    밥토리 AI 챗봇과 대화
+    
+    - **session_id**: 사용자별 대화 기록을 유지하기 위한 고유 ID
+    - **message**: 사용자가 보낸 메시지
+    """
+    try:
+        async def stream_generator():
+            """스트리밍 응답을 생성하는 제너레이터"""
+            config = {"configurable": {"session_id": request.session_id}}
+            
+            # 챗봇 체인을 스트림 방식으로 호출
+            async for chunk in with_message_history.astream(
+                {"message": request.message},
+                config=config
+            ):
+                yield chunk.content
+
+        return StreamingResponse(stream_generator(), media_type="text/plain")
+    except Exception as e:
+        print(f"챗봇 API 오류: {e}")
+        raise HTTPException(status_code=500, detail="챗봇 응답 중 오류가 발생했습니다.")
 
 
 # ============================================

@@ -4,13 +4,6 @@ import { useEffect, useState } from "react"
 import { api } from "../lib/api"
 import type { Food, FoodRecord } from "../types"
 
-const MOCK_FOODS: Food[] = [
-  { id: "1", name: "불고기", category: "한식", emoji: "🍖", isRecommended: true, description: "한우 불고기" },
-  { id: "2", name: "라면", category: "한식", emoji: "🍜", isRecommended: false, description: "신라면" },
-  { id: "3", name: "초밥", category: "일식", emoji: "🍣", isRecommended: true, description: "참치 오타마" },
-  { id: "4", name: "짜장면", category: "중식", emoji: "🍲", isRecommended: false, description: "검은콩 짜장면" },
-]
-
 interface FoodDiaryItemApi {
   id: number
   user_id: string
@@ -41,21 +34,16 @@ export function useFoodRecords(userId: string = "default_user") {
 
         // ✅ 프론트에서 쓰기 편한 형태로 변환
         const mapped: FoodRecord[] = res.records.map((item) => {
-        // 기록의 음식 이름과 MOCK_FOODS를 매칭해보고,
-        // 없으면 임시 Food 객체를 만들어서 채워줌
-        const found = MOCK_FOODS.find((f) => f.name === item.food_name)
-        const food: Food =
-          found ??
-          {
-            id: String(item.id),
+          const food: Food = {
+            id: String(item.id), // 음식 자체의 ID가 없으므로 기록 ID를 사용
             name: item.food_name,
-            category: "기타",
-            emoji: "🍚",
+            category: "기타", // 백엔드에서 카테고리를 주지 않으므로 '기타'로 통일
+            emoji: "🍚", // 기본 이모지
             isRecommended: item.is_recommended,
-            description: "",
-          }
+            description: "", // 음식 설명은 기록에 없음
+          };
 
-        return {
+          return {
           id: String(item.id),
           food,
           photoUrl: item.image_url ?? undefined,
@@ -94,7 +82,6 @@ export function useFoodRecords(userId: string = "default_user") {
   }
 
   return {
-    mockFoods: MOCK_FOODS,
     records,
     addRecord,
     loading,

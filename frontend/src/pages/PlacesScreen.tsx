@@ -4,18 +4,16 @@ import { useState } from "react"
 import { ChevronUp, MapPin } from "lucide-react"
 import KakaoMap from "../components/KakaoMap"
 import { usePlaces, type Place } from "../hooks/usePlaces"
+import { useGeolocation } from "../hooks/useGeolocation"
 
 interface PlacesScreenProps {
   onBack: () => void
 }
 
 export default function PlacesScreen({ onBack }: PlacesScreenProps) {
-  // TODO: 실제 위치 정보/선택된 음식과 연동 (지금은 예시 좌표)
-  const [lat] = useState(35.8714)      // 예시: 대구 위도
-  const [lon] = useState(128.6014)     // 예시: 대구 경도
-  const foodName = "맛집"              // 나중에 추천된 음식 이름이랑 연결하면 됨
-
-  const { places, loading, error } = usePlaces(foodName, lat, lon)
+  const { location, error: locationError, loading: locationLoading } = useGeolocation()
+  const foodName = "맛집" // 추천된 음식 이름 대신 '맛집'으로 검색
+  const { places, loading: placesLoading, error: placesError } = usePlaces(foodName, location?.lat, location?.lon)
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
 
   const handleSelectPlace = (place: Place) => {
@@ -42,20 +40,20 @@ export default function PlacesScreen({ onBack }: PlacesScreenProps) {
       {/* ✅ 카카오맵 영역 */}
       <div className="space-y-2">
         <h3 className="font-bold text-lg">지도</h3>
-        {loading && (
+        {(locationLoading || placesLoading) && (
           <p className="text-sm text-muted-foreground">
-            주변 맛집 지도 불러오는 중...
+            {locationLoading ? "현재 위치 파악 중..." : "주변 맛집 지도 불러오는 중..."}
           </p>
         )}
-        {error && (
+        {(locationError || placesError) && (
           <p className="text-sm text-red-500">
-            {error}
+            {locationError || placesError}
           </p>
         )}
 
         <KakaoMap
-          center={{ lat, lon }}
-          places={places}
+          center={location ? { lat: location.lat, lon: location.lon } : { lat: 35.8714, lon: 128.6014 }}
+          places={places || []}
         />
       </div>
 
@@ -63,13 +61,13 @@ export default function PlacesScreen({ onBack }: PlacesScreenProps) {
       <div className="space-y-3">
         <h3 className="font-bold text-lg">내 주변 맛집</h3>
 
-        {loading && (
+        {(locationLoading || placesLoading) && (
           <p className="text-sm text-muted-foreground">
             맛집 목록 불러오는 중...
           </p>
         )}
 
-        {!loading && places.length === 0 && !error && (
+        {!placesLoading && places.length === 0 && !placesError && (
           <p className="text-sm text-muted-foreground">
             주변에서 맛집을 찾지 못했어요 😢
           </p>

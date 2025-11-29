@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import type { Food, WeatherData } from "../types"
+import { useGeolocation } from "./useGeolocation"
+import { useWeather } from "./useWeather"
 import { api } from "../lib/api"
-import type { Food } from "../types"
 
 interface RecommendResponse {
   weather: any
@@ -26,13 +28,23 @@ export function useRecommendations() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const { location, loading: locationLoading } = useGeolocation()
+  const { weather, loading: weatherLoading, error: weatherError } = useWeather() // 이제 인자 없이 호출
+
   useEffect(() => {
+    if (locationLoading) return // 위치 정보를 가져올 때까지 대기
+
     async function fetchRecommendations() {
       try {
         setLoading(true)
         setError(null)
 
-        const data = await api.get<RecommendResponse>("/food/recommend")
+        const params = new URLSearchParams()
+        if (location) {
+          params.set("lat", String(location.lat))
+          params.set("lon", String(location.lon))
+        }
+        const data = await api.get<RecommendResponse>(`/food/recommend?${params.toString()}`)
 
         const mapped: Food[] = data.recommendations.map((item, index) => ({
           id: String(index + 1),
@@ -53,7 +65,7 @@ export function useRecommendations() {
     }
 
     fetchRecommendations()
-  }, [])
+  }, [location]) // location이 변경되면 추천을 다시 가져옴
 
-  return { foods, loading, error }
+  return { foods, weather, loading: loading || locationLoading || weatherLoading, error: error || weatherError }
 }

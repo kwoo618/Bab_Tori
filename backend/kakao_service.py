@@ -25,47 +25,6 @@ async def search_places(keyword: str, lat: float, lon: float, radius: int = 1000
     Returns:
         list: 맛집 정보 리스트
     """
-    # API 키가 없으면 Mock 데이터 반환
-    if not KAKAO_MAP_API_KEY or KAKAO_MAP_API_KEY == "your_kakao_map_api_key_here":
-        return [
-            {
-                "name": f"{keyword} 맛집 1 (Mock)",
-                "category": "한식",
-                "address": "대구광역시 중구",
-                "road_address": "대구광역시 중구 xx로 123",
-                "latitude": lat + 0.001,
-                "longitude": lon + 0.001,
-                "distance": 100,
-                "phone": "053-XXX-XXXX",
-                "place_url": "https://place.map.kakao.com/",
-                "is_mock": True
-            },
-            {
-                "name": f"{keyword} 맛집 2 (Mock)",
-                "category": "한식",
-                "address": "대구광역시 중구",
-                "road_address": "대구광역시 중구 yy로 456",
-                "latitude": lat - 0.001,
-                "longitude": lon - 0.001,
-                "distance": 150,
-                "phone": "053-YYY-YYYY",
-                "place_url": "https://place.map.kakao.com/",
-                "is_mock": True
-            },
-            {
-                "name": f"{keyword} 맛집 3 (Mock)",
-                "category": "한식",
-                "address": "대구광역시 중구",
-                "road_address": "대구광역시 중구 zz로 789",
-                "latitude": lat + 0.002,
-                "longitude": lon,
-                "distance": 200,
-                "phone": "053-ZZZ-ZZZZ",
-                "place_url": "https://place.map.kakao.com/",
-                "is_mock": True
-            }
-        ]
-    
     url = "https://dapi.kakao.com/v2/local/search/keyword.json"
     headers = {
         "Authorization": f"KakaoAK {KAKAO_MAP_API_KEY}"
