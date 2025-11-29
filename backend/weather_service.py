@@ -23,18 +23,6 @@ async def fetch_weather(lat: float, lon: float):
     Returns:
         dict: 날씨 정보
     """
-    # API 키가 없으면 Mock 데이터 반환
-    if not OPENWEATHERMAP_API_KEY or OPENWEATHERMAP_API_KEY == "your_openweathermap_api_key_here":
-        return {
-            "location": "대구",
-            "temperature": 20.0,
-            "condition": "Clear",
-            "description": "맑음",
-            "humidity": 60,
-            "feels_like": 19.0,
-            "is_mock": True
-        }
-    
     url = "https://api.openweathermap.org/data/2.5/weather"
     params = {
         "lat": lat,

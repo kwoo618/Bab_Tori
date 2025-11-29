@@ -72,7 +72,7 @@ export default function KakaoMap({ center, places }: KakaoMapProps) {
 
           // 마커 찍기
           places.forEach((p) => {
-            const pos = new window.kakao.maps.LatLng(p.lat, p.lon)
+            const pos = new window.kakao.maps.LatLng(Number(p.y), Number(p.x))
             const marker = new window.kakao.maps.Marker({
               position: pos,
             })

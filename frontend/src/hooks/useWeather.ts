@@ -13,19 +13,22 @@ interface WeatherApiResponse {
   // feels_like 등은 지금 안 써서 생략
 }
 
-export function useWeather() {
+export function useWeather(lat?: number, lon?: number) {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (typeof lat !== "number" || typeof lon !== "number") {
+      return
+    }
     async function fetchWeather() {
       try {
         setLoading(true)
         setError(null)
 
-        // FastAPI /weather (기본 lat, lon: 대구)
-        const data = await api.get<WeatherApiResponse>("/weather")
+        // FastAPI /weather 에 현재 위치 전달
+        const data = await api.get<WeatherApiResponse>(`/weather?lat=${lat}&lon=${lon}`)
 
         // 날씨 상태에 따라 이모지 매핑
         let icon = "☀️"
@@ -62,7 +65,7 @@ export function useWeather() {
     }
 
     fetchWeather()
-  }, [])
+  }, [lat, lon])
 
   return { weather, loading, error }
 }

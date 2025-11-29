@@ -1,10 +1,11 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { ArrowLeft, Camera, MapPin } from "lucide-react"
 import { api } from "../lib/api"
 import { usePlaces } from "../hooks/usePlaces"
+import { useGeolocation } from "../hooks/useGeolocation"
 import KakaoMap from "./KakaoMap"
 
 interface InteractionSectionProps {
@@ -51,14 +52,13 @@ export default function InteractionSection({
     useState<VerificationResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const DEFAULT_LAT = 35.8714
-  const DEFAULT_LON = 128.6014
+  const { location, loading: locationLoading, error: locationError } = useGeolocation()
 
   // ✅ 맛집 조회 훅 (selectedFood 기준)
   const { places, loading: placesLoading, error: placesError } = usePlaces(
     selectedFood || null,
-    DEFAULT_LAT,
-    DEFAULT_LON,
+    location?.lat,
+    location?.lon,
   )
   // 파일 선택 시
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,7 +166,7 @@ export default function InteractionSection({
             {/* ✅ 실제 카카오맵 */}
             <div className="relative">
               <KakaoMap
-                center={{ lat: DEFAULT_LAT, lon: DEFAULT_LON }}
+                center={location ? { lat: location.lat, lon: location.lon } : { lat: 35.8714, lon: 128.6014 }}
                 places={places}
               />
 
@@ -175,7 +175,9 @@ export default function InteractionSection({
                 <div className="bg-white/90 px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-sky-600" />
                   <span className="text-sm font-bold text-gray-700">
-                    {placesLoading
+                    {locationLoading
+                      ? "현재 위치를 찾는 중이에요..."
+                      : placesLoading
                       ? `${selectedFood} 맛집을 찾는 중이에요...`
                       : placesError
                       ? "맛집 정보를 불러올 수 없어요"

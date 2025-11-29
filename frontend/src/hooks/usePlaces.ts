@@ -7,9 +7,9 @@ export interface Place {
   id: string
   name: string
   address: string
-  roadAddress?: string | null
-  lat: number
-  lon: number
+  roadAddress: string | null
+  y: string // 위도 (latitude)
+  x: string // 경도 (longitude)
   distance_m?: number
   phone?: string | null
   placeUrl?: string | null
@@ -23,8 +23,8 @@ interface PlacesResponse {
     category: string
     address: string
     road_address: string | null
-    latitude: number
-    longitude: number
+    y: string // API는 위도를 y로 줌
+    x: string // API는 경도를 x로 줌
     distance: number
     phone: string | null
     place_url: string | null
@@ -32,13 +32,13 @@ interface PlacesResponse {
   }>
 }
 
-export function usePlaces(foodName: string | null, lat: number, lon: number) {
+export function usePlaces(foodName: string | null, lat?: number, lon?: number) {
   const [places, setPlaces] = useState<Place[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!lat || !lon) return
+    if (!foodName || typeof lat !== "number" || typeof lon !== "number") return
 
     async function fetchPlaces() {
       setLoading(true)
@@ -46,7 +46,7 @@ export function usePlaces(foodName: string | null, lat: number, lon: number) {
 
       try {
         const resp = await api.get<PlacesResponse>(
-          `/places?keyword=${encodeURIComponent(foodName || "맛집")}&lat=${lat}&lon=${lon}&radius=1000`
+          `/places?query=${encodeURIComponent(foodName)}&lat=${lat}&lon=${lon}&radius=1000`
         )
 
         const mapped: Place[] = resp.places.map((p, idx) => ({
@@ -54,8 +54,8 @@ export function usePlaces(foodName: string | null, lat: number, lon: number) {
           name: p.name,
           address: p.address,
           roadAddress: p.road_address,
-          lat: p.latitude,
-          lon: p.longitude,
+          y: p.y, // 위도
+          x: p.x, // 경도
           distance_m: p.distance,
           phone: p.phone,
           placeUrl: p.place_url,
