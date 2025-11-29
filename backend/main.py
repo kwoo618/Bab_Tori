@@ -11,6 +11,9 @@ from datetime import datetime, timedelta
 from typing import Optional
 from pydantic import BaseModel
 import uvicorn
+import os
+import shutil
+from fastapi.staticfiles import StaticFiles
 
 # 로컬 모듈
 from database import engine, get_db, Base
@@ -46,6 +49,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# /uploads 경로로 정적 파일 제공
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 
 # ============================================
@@ -290,8 +299,16 @@ async def select_food(
     # 사진 처리 (선택사항)
     photo_url = None
     if photo:
-        # TODO: 실제 파일 저장 로직
-        photo_url = f"/uploads/{photo.filename}"
+        # 파일 이름 만들어서 저장
+        # (충돌 방지용으로 시간 + 원본 파일명 섞어줌)
+        filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{photo.filename}"
+        file_path = os.path.join(UPLOAD_DIR, filename)
+
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(photo.file, buffer)
+
+        # 클라이언트에서 접근할 때 쓸 경로 (앞에서 StaticFiles로 마운트한 경로)
+        photo_url = f"/uploads/{filename}"
     
     # 음식 기록 저장
     food_record = FoodRecord(

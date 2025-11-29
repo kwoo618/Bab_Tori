@@ -4,13 +4,16 @@ import { useEffect, useState } from "react"
 import { api } from "../lib/api"
 import type { Food, FoodRecord } from "../types"
 
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
+
 interface FoodDiaryItemApi {
   id: number
   user_id: string
   food_name: string
   is_recommended: boolean
   created_at: string
-  image_url?: string | null
+  photo_url?: string | null
   place_name?: string | null
 }
 
@@ -46,7 +49,9 @@ export function useFoodRecords(userId: string = "default_user") {
           return {
           id: String(item.id),
           food,
-          photoUrl: item.image_url ?? undefined,
+          photoUrl: item.photo_url
+          ? `${API_BASE}${item.photo_url}`
+          : undefined,
           timestamp: new Date(item.created_at),
           satietyGain: 0,        // 백엔드에서 값 안 주면 일단 0으로
           expGain: 0,            // 필요하면 나중에 수정
