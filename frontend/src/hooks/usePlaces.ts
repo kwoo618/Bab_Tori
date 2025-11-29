@@ -38,9 +38,12 @@ export function usePlaces(foodName: string | null, lat?: number, lon?: number) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!foodName || typeof lat !== "number" || typeof lon !== "number") return
-
     async function fetchPlaces() {
+      // API를 호출하기 직전에 모든 값이 유효한지 다시 확인합니다.
+      if (!foodName || typeof lat !== "number" || typeof lon !== "number") {
+        return
+      }
+
       setLoading(true)
       setError(null)
 

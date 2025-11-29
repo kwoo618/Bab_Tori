@@ -39,9 +39,7 @@ export default function InteractionSection({
   onBack,
   hidePlaces = false,
 }: InteractionSectionProps) {
-  const [activeTab, setActiveTab] = useState<"map" | "upload">(
-    hidePlaces ? "upload" : "map",
-  )
+  const [activeTab, setActiveTab] = useState<"map" | "upload">("map")
 
   // ✅ 사진 인증용 상태들
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -126,27 +124,21 @@ export default function InteractionSection({
           <ArrowLeft className="w-6 h-6" />
         </button>
         <h4 className="font-bold text-center flex-1 text-lg">
-          {hidePlaces || activeTab === "upload"
-            ? "오늘 먹은 음식 인증하기"
-            : "선택한 메뉴 주변 맛집!"}
+          {activeTab === "upload" ? "오늘 먹은 음식 인증하기" : "선택한 메뉴 주변 맛집!"}
         </h4>
       </div>
 
       <div className="p-4 min-h-[300px]">
         {/* 탭 컨트롤 */}
         <div className="flex mb-4 bg-gray-100 p-1 rounded-lg">
-          {!hidePlaces && (
-            <button
-              onClick={() => setActiveTab("map")}
-              className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-                activeTab === "map"
-                  ? "bg-white shadow text-sky-600"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              맛집 찾기
-            </button>
-          )}
+          <button
+            onClick={() => setActiveTab("map")}
+            className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
+              activeTab === "map" ? "bg-white shadow text-sky-600" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            맛집 찾기
+          </button>
 
           <button
             onClick={() => setActiveTab("upload")}
@@ -161,18 +153,18 @@ export default function InteractionSection({
         </div>
 
         {/* Map Content */}
-        {!hidePlaces && activeTab === "map" && (
+        {activeTab === "map" && (
           <div className="animate-in fade-in duration-300 space-y-4">
             {/* ✅ 실제 카카오맵 */}
             <div className="relative">
               <KakaoMap
                 center={location ? { lat: location.lat, lon: location.lon } : { lat: 35.8714, lon: 128.6014 }}
-                places={places}
+                places={places || []}
               />
 
               {/* 예전처럼 위에 뜨는 말풍선 유지 */}
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="bg-white/90 px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full px-4 pointer-events-none">
+                <div className="bg-white/90 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 max-w-xs mx-auto">
                   <MapPin className="w-4 h-4 text-sky-600" />
                   <span className="text-sm font-bold text-gray-700">
                     {locationLoading
