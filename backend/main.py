@@ -51,7 +51,7 @@ app.add_middleware(
 
 # 정적 파일 마운트 (이미지 제공용)
 # /images URL 경로를 'foods' 디렉토리와 연결합니다.
-app.mount("/images", StaticFiles(directory="foods"), name="images")
+app.mount("/images", StaticFiles(directory="foods/images"), name="images")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 

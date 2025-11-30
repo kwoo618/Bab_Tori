@@ -58,7 +58,8 @@ def recommend_4_foods(db: Session, weather_condition: str, temperature: float):
             "name": food1.name,
             "category": food1.category,
             "ingredients": food1.ingredients,
-            "image_url": food1.image_url,
+            "imageUrl": food1.image_url,
+            "description": reason,
             "reason": reason,
             "type": "weather_ingredient"
         })
@@ -92,7 +93,8 @@ def recommend_4_foods(db: Session, weather_condition: str, temperature: float):
                 "name": food2.name,
                 "category": food2.category,
                 "ingredients": food2.ingredients,
-                "image_url": food2.image_url,
+                "imageUrl": food2.image_url,
+                "description": reason, # 👈 추천 이유를 description으로 추가
                 "reason": reason,
                 "type": "weather_category"
             })
@@ -116,7 +118,8 @@ def recommend_4_foods(db: Session, weather_condition: str, temperature: float):
                 "name": food.name,
                 "category": food.category,
                 "ingredients": food.ingredients,
-                "image_url": food.image_url,
+                "imageUrl": food.image_url,
+                "description": "이것도 맛있을 것 같아!", # 👈 추천 이유를 description으로 추가
                 "reason": "이것도 맛있을 것 같아!",
                 "type": "random"
             })
