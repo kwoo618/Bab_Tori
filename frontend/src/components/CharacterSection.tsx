@@ -56,7 +56,7 @@ export default function CharacterSection({status,message,emoji,onOpenCollection,
         </div>
         <div className="w-full flex items-center justify-center mt-4">
           <img
-            src="/cat/CatBaseSm.png"
+            src="/cat/catpt.png"
             alt="밥토리 캐릭터"
             className="w-32 h-32 object-contain drop-shadow-md character-animation"
           />
