@@ -83,7 +83,7 @@ export default function RecommendationSection({ onFoodSelect, onOpenChat, onOpen
             <div onClick={() => onFoodSelect(food.name)}>
               <div className="overflow-hidden rounded-lg mb-3">
                 <img
-                  src="/placeholder.svg"
+                  src={food.imageUrl || "/placeholder.svg"}
                   alt={food.name}
                   className="w-full h-24 object-cover transform hover:scale-110 transition-transform duration-500"
                 />

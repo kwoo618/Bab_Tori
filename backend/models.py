@@ -61,6 +61,38 @@ class CharacterState(Base):
 
 
 # ============================================
+# 음식 정보 모델
+# ============================================
+
+class Food(Base):
+    """
+    음식 정보 테이블
+    recommendation_system에서 사용하는 음식 데이터베이스
+    """
+    __tablename__ = "foods"
+    
+    # 기본 키
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    
+    # 음식 정보
+    name = Column(String(100), nullable=False, index=True, unique=True)
+    category = Column(String(50), nullable=True)  # 한식, 중식, 일식 등
+    ingredients = Column(String(200), nullable=True)  # 고기,면,국물 등
+    image_url = Column(Text, nullable=True)  # 음식 이미지 URL
+    description = Column(Text, nullable=True) # 음식 설명
+    
+    # 시간 정보
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    def __repr__(self):
+        return f"<Food(name='{self.name}', category='{self.category}')>"
+    
+    def to_dict(self):
+        """딕셔너리로 변환"""
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+# ============================================
 # 음식 기록 모델
 # ============================================
 

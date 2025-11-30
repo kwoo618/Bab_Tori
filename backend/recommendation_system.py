@@ -6,18 +6,21 @@
 
 import random
 from datetime import datetime
-from foods_data import FOOD_DATABASE, get_foods_by_category, get_foods_by_ingredient
+from sqlalchemy.orm import Session
+from models import Food
 
 
 # ============================================
 # 4가지 음식 추천 시스템
 # ============================================
 
-def recommend_4_foods(weather_condition: str, temperature: float):
+def recommend_4_foods(db: Session, weather_condition: str, temperature: float):
     """
     날씨 기반 + 랜덤으로 총 4개 음식 추천
+    (데이터베이스 사용 버전)
     
     Args:
+        db: SQLAlchemy 세션 객체
         weather_condition: 날씨 상태 (Rain, Snow, Clear 등)
         temperature: 온도 (섭씨)
     
@@ -48,61 +51,72 @@ def recommend_4_foods(weather_condition: str, temperature: float):
         ingredient = "밥"
         reason = "든든하게 밥 먹자!"
     
-    ingredient_foods = get_foods_by_ingredient(ingredient)
+    ingredient_foods = db.query(Food).filter(Food.ingredients.contains(ingredient)).all()
     if ingredient_foods:
         food1 = random.choice(ingredient_foods)
         recommendations.append({
-            "name": food1["name"],
-            "category": food1["category"],
-            "ingredients": food1["ingredients"],
+            "name": food1.name,
+            "category": food1.category,
+            "ingredients": food1.ingredients,
+            "image_url": food1.image_url,
             "reason": reason,
             "type": "weather_ingredient"
         })
     
     # ===== 추천 2: 날씨 기반 - 카테고리 우선 =====
     if weather_condition in ["Rain", "Drizzle", "Thunderstorm", "Snow"]:
-        # 비/눈 오는 날 → 찜/탕
-        category = "찜/탕"
-        reason = "날씨가 안 좋을 땐 따뜻한 찜/탕!"
-    elif temperature > 28:
-        # 더운 날 → 양식 (가벼운)
-        category = "양식"
-        reason = "더울 땐 시원한 양식!"
-    elif temperature < 10:
-        # 추운 날 → 한식
+        # 비/눈 오는 날 → 한식 (국물 요리가 많음)
         category = "한식"
-        reason = "추울 땐 따뜻한 한식!"
-    else:
-        # 보통 날씨 → 중식
+        reason = "날씨가 안 좋을 땐 역시 한식!"
+    elif temperature > 28:
+        # 더운 날 → 일식 (차가운 메뉴가 많음)
+        category = "일식"
+        reason = "더울 땐 깔끔한 일식!"
+    elif temperature < 10:
+        # 추운 날 → 중식 (기름진 음식)
         category = "중식"
-        reason = "든든한 중식 어때?"
+        reason = "추울 땐 든든한 중식!"
+    else:
+        # 보통 날씨 → 양식
+        category = "양식"
+        reason = "오늘은 양식 어때?"
     
-    category_foods = get_foods_by_category(category)
+    category_foods = db.query(Food).filter(Food.category == category).all()
     if category_foods:
         # 추천 1과 중복 방지
-        available = [f for f in category_foods if f["name"] != recommendations[0]["name"]]
+        already_recommended_names = [r['name'] for r in recommendations]
+        available = [f for f in category_foods if f.name not in already_recommended_names]
         if available:
             food2 = random.choice(available)
             recommendations.append({
-                "name": food2["name"],
-                "category": food2["category"],
-                "ingredients": food2["ingredients"],
+                "name": food2.name,
+                "category": food2.category,
+                "ingredients": food2.ingredients,
+                "image_url": food2.image_url,
                 "reason": reason,
                 "type": "weather_category"
             })
     
     # ===== 추천 3-4: 완전 랜덤 =====
     # 이미 추천된 음식 제외
-    already_recommended = [r["name"] for r in recommendations]
-    available_foods = [f for f in FOOD_DATABASE if f["name"] not in already_recommended]
+    already_recommended_names = [r["name"] for r in recommendations]
     
-    if len(available_foods) >= 2:
-        random_foods = random.sample(available_foods, 2)
+    query = db.query(Food)
+    if already_recommended_names:
+        query = query.filter(Food.name.notin_(already_recommended_names))
+    available_foods = query.all()
+    
+    # 추천할 랜덤 음식 개수
+    num_to_recommend = min(len(available_foods), 4 - len(recommendations))
+
+    if num_to_recommend > 0:
+        random_foods = random.sample(available_foods, num_to_recommend)
         for food in random_foods:
             recommendations.append({
-                "name": food["name"],
-                "category": food["category"],
-                "ingredients": food["ingredients"],
+                "name": food.name,
+                "category": food.category,
+                "ingredients": food.ingredients,
+                "image_url": food.image_url,
                 "reason": "이것도 맛있을 것 같아!",
                 "type": "random"
             })
@@ -114,11 +128,12 @@ def recommend_4_foods(weather_condition: str, temperature: float):
 # 챗봇 추천 시스템 (카테고리 + 재료 필터)
 # ============================================
 
-def chatbot_filter_recommend(category: str = None, ingredients: list = None, limit: int = 3):
+def chatbot_filter_recommend(db: Session, category: str = None, ingredients: list = None, limit: int = 3):
     """
-    카테고리와 재료로 필터링하여 추천
+    카테고리와 재료로 필터링하여 추천 (DB 사용)
     
     Args:
+        db: SQLAlchemy 세션 객체
         category: 선택한 카테고리 (한식, 중식, 일식, 양식, 패스트푸드, 분식, 찜/탕)
         ingredients: 선택한 재료 리스트 (["고기", "밥"])
         limit: 추천할 음식 개수 (기본 3개)
@@ -126,18 +141,18 @@ def chatbot_filter_recommend(category: str = None, ingredients: list = None, lim
     Returns:
         list: 추천 음식 리스트
     """
-    filtered_foods = FOOD_DATABASE.copy()
+    query = db.query(Food)
     
     # 1단계: 카테고리 필터
     if category:
-        filtered_foods = [f for f in filtered_foods if f["category"] == category]
+        query = query.filter(Food.category == category)
     
     # 2단계: 재료 필터 (선택한 재료가 모두 포함된 음식)
     if ingredients:
-        filtered_foods = [
-            f for f in filtered_foods 
-            if all(ing in f["ingredients"] for ing in ingredients)
-        ]
+        for ing in ingredients:
+            query = query.filter(Food.ingredients.contains(ing))
+    
+    filtered_foods = query.all()
     
     # 추천
     if len(filtered_foods) >= limit:
@@ -147,59 +162,11 @@ def chatbot_filter_recommend(category: str = None, ingredients: list = None, lim
 
 
 # ============================================
-# 테스트 코드
+# 테스트 코드 (현재 파일 직접 실행 시 사용 안 함)
 # ============================================
 
 if __name__ == "__main__":
-    print("=" * 60)
-    print("음식 추천 시스템 테스트")
-    print("=" * 60)
-    print()
-    
-    # ===== 1. 날씨 기반 4개 추천 =====
-    print("🌧️ 비 오는 날 추천 (4개):")
-    recommendations = recommend_4_foods("Rain", 15)
-    for i, food in enumerate(recommendations, 1):
-        print(f"  {i}. {food['name']} ({food['category']})")
-        print(f"     재료: {', '.join(food['ingredients'])}")
-        print(f"     이유: {food['reason']}")
-        print()
-    
-    print("-" * 60)
-    print()
-    
-    # ===== 2. 더운 날 추천 =====
-    print("☀️ 더운 날 추천 (4개):")
-    recommendations = recommend_4_foods("Clear", 32)
-    for i, food in enumerate(recommendations, 1):
-        print(f"  {i}. {food['name']} ({food['category']})")
-        print(f"     이유: {food['reason']}")
-        print()
-    
-    print("-" * 60)
-    print()
-    
-    # ===== 3. 챗봇 - 카테고리 필터 =====
-    print("💬 챗봇: '한식' 카테고리 추천:")
-    chatbot_result = chatbot_filter_recommend(category="한식", limit=3)
-    for food in chatbot_result:
-        print(f"  - {food['name']} (재료: {', '.join(food['ingredients'])})")
-    print()
-    
-    # ===== 4. 챗봇 - 재료 필터 =====
-    print("💬 챗봇: '고기 + 밥' 재료 추천:")
-    chatbot_result = chatbot_filter_recommend(ingredients=["고기", "밥"], limit=3)
-    for food in chatbot_result:
-        print(f"  - {food['name']} ({food['category']})")
-    print()
-    
-    # ===== 5. 챗봇 - 카테고리 + 재료 복합 필터 =====
-    print("💬 챗봇: '한식 + 고기 + 밥' 복합 필터:")
-    chatbot_result = chatbot_filter_recommend(category="한식", ingredients=["고기", "밥"], limit=3)
-    for food in chatbot_result:
-        print(f"  - {food['name']}")
-    print()
-    
-    print("=" * 60)
-    print("테스트 완료! ✅")
-    print("=" * 60)
+    # 이 파일은 직접 실행되지 않고 main.py에서 임포트하여 사용됩니다.
+    # 테스트를 원할 경우, 데이터베이스 세션을 생성하여 함수에 전달해야 합니다.
+    print("이 파일은 직접 실행하여 테스트할 수 없습니다.")
+    print("main.py를 통해 API를 호출하여 테스트해주세요.")
