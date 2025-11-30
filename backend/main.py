@@ -113,6 +113,7 @@ async def get_places(
     - **radius**: 검색 반경 (미터)
     """
     places = await search_places(keyword, lat, lon, radius)
+
     return {
         "keyword": keyword,
         "count": len(places),
