@@ -22,6 +22,7 @@ from chatbot import with_message_history
 from weather_service import fetch_weather
 from kakao_service import search_places
 from recommendation_system import recommend_4_foods
+from foods_data import FOOD_DATABASE, load_foods_from_csv
 
 # 데이터베이스 테이블 생성
 Base.metadata.create_all(bind=engine)
@@ -254,6 +255,7 @@ async def select_food(
     is_recommended: bool = True,
     photo: Optional[UploadFile] = File(None),
     user_id: str = "default_user",
+    category: Optional[str] = None,
     lat: float = 35.8714,
     lon: float = 128.6014,
     db: Session = Depends(get_db)
@@ -310,17 +312,30 @@ async def select_food(
         # 클라이언트에서 접근할 때 쓸 경로 (앞에서 StaticFiles로 마운트한 경로)
         photo_url = f"/uploads/{filename}"
     
+    # 카테고리 채우기
+    record_category = category
+
+    # 프론트에서 category를 안 보내면 CSV에서 찾아보기
+    if not record_category:
+        if not FOOD_DATABASE:
+            load_foods_from_csv()
+        for food in FOOD_DATABASE:
+            if food["name"] == food_name:
+                record_category = food["category"]
+                break
+
     # 음식 기록 저장
     food_record = FoodRecord(
         user_id=user_id,
         food_name=food_name,
+        category=record_category,   # ✅ 추가
         is_recommended=is_recommended,
         satiety_gain=satiety_gain,
         friendship_gain=friendship_gain,
         exp_gain=exp_gain,
         photo_url=photo_url,
         weather_condition=weather["condition"],
-        temperature=weather["temperature"]
+        temperature=weather["temperature"],
     )
     
     db.add(food_record)

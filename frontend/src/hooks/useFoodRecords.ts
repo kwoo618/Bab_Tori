@@ -11,6 +11,7 @@ interface FoodDiaryItemApi {
   id: number
   user_id: string
   food_name: string
+  category: string | null
   is_recommended: boolean
   created_at: string
   photo_url?: string | null
@@ -40,7 +41,7 @@ export function useFoodRecords(userId: string = "default_user") {
           const food: Food = {
             id: String(item.id), // 음식 자체의 ID가 없으므로 기록 ID를 사용
             name: item.food_name,
-            category: "기타", // 백엔드에서 카테고리를 주지 않으므로 '기타'로 통일
+            category: item.category ?? "기타", // 백엔드에서 카테고리를 주지 않으므로 '기타'로 통일
             emoji: "🍚", // 기본 이모지
             isRecommended: item.is_recommended,
             description: "", // 음식 설명은 기록에 없음
