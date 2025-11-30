@@ -2,7 +2,8 @@
 밥토리 백엔드 API
 날씨 기반 음식 추천 및 캐릭터 육성 시스템
 """
-
+import os
+from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -10,14 +11,13 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional
 from pydantic import BaseModel
+import aiofiles
 import uvicorn
-import os
 import shutil
-from fastapi.staticfiles import StaticFiles
 
 # 로컬 모듈
 from database import engine, get_db, Base
-from models import CharacterState, FoodRecord
+from models import CharacterState, FoodRecord, Food
 from chatbot import with_message_history
 from weather_service import fetch_weather
 from kakao_service import search_places
@@ -51,11 +51,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-# /uploads 경로로 정적 파일 제공
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+# 정적 파일 마운트 (이미지 제공용)
+# /images URL 경로를 'foods' 디렉토리와 연결합니다.
+app.mount("/images", StaticFiles(directory="foods/images"), name="images")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 # ============================================
@@ -230,10 +229,20 @@ async def recommend_food(
     
     # 3. 음식 추천 (4개)
     recommendations = recommend_4_foods(
+        db,
         weather["condition"],
         weather["temperature"]
     )
     
+    # image_url을 프론트엔드에서 바로 사용할 수 있는 전체 URL로 변환
+    base_url = "http://localhost:8000"
+    for item in recommendations:
+        # 'imageUrl' 키가 있고, 값이 비어있지 않은 경우
+        if item.get("imageUrl"):
+            # 'imageUrl'이 http로 시작하지 않으면, base_url을 앞에 붙여 완전한 URL로 만듦
+            if not str(item["imageUrl"]).startswith("http"):
+                item["imageUrl"] = f"{base_url}{item['imageUrl']}"
+
     return {
         "weather": weather,
         "character": {
@@ -298,24 +307,27 @@ async def select_food(
     # 날씨 정보 가져오기
     weather = await fetch_weather(lat, lon)
     
+    # 음식 정보 가져오기 (카테고리, 재료 등)
+    food_info = db.query(Food).filter(Food.name == food_name).first()
+    food_category = food_info.category if food_info else None
+    food_ingredients = food_info.ingredients if food_info else None
+
     # 사진 처리 (선택사항)
     photo_url = None
     if photo:
-        # 파일 이름 만들어서 저장
-        # (충돌 방지용으로 시간 + 원본 파일명 섞어줌)
-        filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{photo.filename}"
-        file_path = os.path.join(UPLOAD_DIR, filename)
-
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(photo.file, buffer)
-
-        # 클라이언트에서 접근할 때 쓸 경로 (앞에서 StaticFiles로 마운트한 경로)
-        photo_url = f"/uploads/{filename}"
+        # uploads 폴더가 없으면 생성
+        upload_dir = "uploads"
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        file_path = os.path.join(upload_dir, photo.filename)
+        async with aiofiles.open(file_path, 'wb') as out_file:
+            content = await photo.read()
+            await out_file.write(content)
+        photo_url = f"/{file_path}"
     
     # 카테고리 채우기
-    record_category = category
+    record_category = category or food_category
 
-    # 프론트에서 category를 안 보내면 CSV에서 찾아보기
     if not record_category:
         if not FOOD_DATABASE:
             load_foods_from_csv()
@@ -328,7 +340,8 @@ async def select_food(
     food_record = FoodRecord(
         user_id=user_id,
         food_name=food_name,
-        category=record_category,   # ✅ 추가
+        category=record_category,
+        ingredients=food_ingredients,
         is_recommended=is_recommended,
         satiety_gain=satiety_gain,
         friendship_gain=friendship_gain,
@@ -404,18 +417,18 @@ async def chat_with_bot(request: ChatRequest):
 
 @app.get("/food/diary")
 def get_food_diary(user_id: str = "default_user", db: Session = Depends(get_db)):
-    """음식 일기 조회 (먹었던 음식 기록)"""
-    records = db.query(FoodRecord)\
-        .filter(FoodRecord.user_id == user_id)\
-        .order_by(FoodRecord.created_at.desc())\
+    records = (
+        db.query(FoodRecord)
+        .filter(FoodRecord.user_id == user_id)
+        .order_by(FoodRecord.created_at.desc())
         .all()
-    
+    )
+
     return {
         "user_id": user_id,
         "total_count": len(records),
-        "records": [record.to_dict() for record in records]
+        "records": [record.to_dict() for record in records],  # ✅ 여기
     }
-
 
 # ============================================
 # 서버 실행

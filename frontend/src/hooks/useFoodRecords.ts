@@ -41,24 +41,26 @@ export function useFoodRecords(userId: string = "default_user") {
           const food: Food = {
             id: String(item.id), // 음식 자체의 ID가 없으므로 기록 ID를 사용
             name: item.food_name,
-            category: item.category ?? "기타", // 백엔드에서 카테고리를 주지 않으므로 '기타'로 통일
-            emoji: "🍚", // 기본 이모지
+            // ✅ 백엔드에서 내려준 카테고리 사용, 없으면 '기타'
+            category: item.category ?? "기타",
+            emoji: "🍚",
             isRecommended: item.is_recommended,
-            description: "", // 음식 설명은 기록에 없음
-          };
+            description: "",
+          }
 
           return {
-          id: String(item.id),
-          food,
-          photoUrl: item.photo_url
-          ? `${API_BASE}${item.photo_url}`
-          : undefined,
-          timestamp: new Date(item.created_at),
-          satietyGain: 0,        // 백엔드에서 값 안 주면 일단 0으로
-          expGain: 0,            // 필요하면 나중에 수정
-          friendshipGain: 0,     // 필요하면 나중에 수정
-        }
-      })
+            id: String(item.id),
+            food,
+            photoUrl: item.photo_url
+              ? `${API_BASE}${item.photo_url}`
+              : undefined,
+            timestamp: new Date(item.created_at),
+            // 필요하면 나중에 백엔드 값으로 바꿀 수 있음
+            satietyGain: 0,
+            expGain: 0,
+            friendshipGain: 0,
+          }
+        })
 
         setRecords(mapped)
       } catch (e) {

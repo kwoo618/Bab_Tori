@@ -17,12 +17,16 @@ export interface Character {
 }
 
 export interface Food {
-  id: string
+  id?: string // 백엔드에서 id를 보내주지 않으므로 optional로 변경
   name: string
   category: string
+  ingredients?: string
+  imageUrl?: string // ✅ imageUrl 추가
+  description?: string
+  reason?: string
+  type?: string
   emoji: string
   isRecommended: boolean
-  description: string
 }
 
 export interface FoodRecord {
