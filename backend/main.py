@@ -2,7 +2,7 @@
 밥토리 백엔드 API
 날씨 기반 음식 추천 및 캐릭터 육성 시스템
 """
-
+import os
 from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -111,6 +111,7 @@ async def get_places(
     - **radius**: 검색 반경 (미터)
     """
     places = await search_places(keyword, lat, lon, radius)
+
     return {
         "keyword": keyword,
         "count": len(places),

@@ -32,14 +32,22 @@ def init_db():
         Base.metadata.create_all(bind=engine)
         print("테이블 준비 완료.")
 
-        # 1. 기존 'foods' 테이블의 모든 데이터 삭제 (TRUNCATE)
+        # 1. 사용자 관련 데이터 초기화 (캐릭터 상태, 음식 기록 등)
+        print("사용자 관련 데이터를 초기화합니다 (캐릭터, 음식일기, 선호도)...")
+        db.execute(text("TRUNCATE TABLE character_states RESTART IDENTITY CASCADE"))
+        db.execute(text("TRUNCATE TABLE food_records RESTART IDENTITY CASCADE"))
+        db.execute(text("TRUNCATE TABLE user_preferences RESTART IDENTITY CASCADE"))
+        db.commit()
+        print("사용자 데이터 초기화 완료.")
+
+        # 2. 기존 'foods' 테이블의 모든 데이터 삭제 (TRUNCATE)
         # CASCADE를 사용하여 외래 키 제약 조건이 있는 경우에도 삭제합니다.
-        print("기존 음식 데이터를 삭제합니다...")
+        print("기존 음식 데이터를 새로고침합니다...")
         db.execute(text("TRUNCATE TABLE foods RESTART IDENTITY CASCADE"))
         db.commit()
-        print("기존 데이터 삭제 완료.")
+        print("기존 음식 데이터 삭제 완료.")
 
-        # 2. foods_database.csv 파일 읽기
+        # 3. foods_database.csv 파일 읽기
         print("CSV 파일에서 새로운 데이터를 읽어옵니다...")
         with open('foods_database.csv', 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -47,6 +55,7 @@ def init_db():
 
         # 3. CSV 데이터를 데이터베이스에 삽입
         print(f"{len(foods_to_add)}개의 음식 데이터를 데이터베이스에 추가합니다...")
+
         for food in foods_to_add:
             # description이 없는 경우를 대비하여 기본값 설정
             description = food.get('description', f"{food['name']}입니다. 맛있게 드세요!")
@@ -58,7 +67,7 @@ def init_db():
             db.execute(stmt, {**food, 'description': description})
         
         db.commit()
-        print("데이터 추가 완료!")
+        print("새로운 음식 데이터 추가 완료!")
         print("데이터베이스 초기화가 성공적으로 완료되었습니다.")
 
     finally:
