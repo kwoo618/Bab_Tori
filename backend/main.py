@@ -232,6 +232,15 @@ async def recommend_food(
         weather["temperature"]
     )
     
+    # image_url을 프론트엔드에서 바로 사용할 수 있는 전체 URL로 변환
+    base_url = "http://localhost:8000"
+    for item in recommendations:
+        # 'imageUrl' 키가 있고, 값이 비어있지 않은 경우
+        if item.get("imageUrl"):
+            # 'imageUrl'이 http로 시작하지 않으면, base_url을 앞에 붙여 완전한 URL로 만듦
+            if not str(item["imageUrl"]).startswith("http"):
+                item["imageUrl"] = f"{base_url}{item['imageUrl']}"
+
     return {
         "weather": weather,
         "character": {
