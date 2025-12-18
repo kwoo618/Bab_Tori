@@ -3,6 +3,7 @@
 import type React from "react"
 import { useCharacter } from "../hooks/useCharacter"
 import { UtensilsCrossed, Smile, Battery, Heart, BookOpen } from "lucide-react"
+import { getCatImageByLevel } from "../lib/characterImage"
 
 interface CharacterSectionProps {
   status: {
@@ -47,6 +48,9 @@ export default function CharacterSection({status,message,emoji,onOpenCollection,
   const friendshipValue =
     character != null ? character.friendship : status.friendship
 
+  const currentLevel = character?.level ?? 0
+  const catSrc = getCatImageByLevel(currentLevel)
+
   return (
     <section id="character-section" className="flex flex-col items-center pt-8">
       {/* Character */}
@@ -56,7 +60,7 @@ export default function CharacterSection({status,message,emoji,onOpenCollection,
         </div>
         <div className="w-full flex items-center justify-center mt-4">
           <img
-            src="/cat/catpt.png"
+            src={catSrc}
             alt="밥토리 캐릭터"
             className="w-32 h-32 object-contain drop-shadow-md character-animation"
           />

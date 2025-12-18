@@ -3,7 +3,7 @@
 import { MessageCircle } from "lucide-react"
 import { useWeather } from "../hooks/useWeather"
 import { useRecommendations } from "../hooks/useRecommendations"  // ✅ 추가
-import type { Food } from "../types"
+import type { Food } from "../types" // 만약 types.ts 파일을 새로 만들었다면, 이 경로를 './types' 등으로 맞춰주세요.
 
 interface RecommendationSectionProps {
   onFoodSelect: (foodName: string) => void
@@ -14,6 +14,9 @@ interface RecommendationSectionProps {
 export default function RecommendationSection({ onFoodSelect, onOpenChat, onOpenFoodModal, }: RecommendationSectionProps) {
   const { weather,loading: weatherLoading,error: weatherError,} = useWeather()
   const {foods,loading: recLoading,error: recError,} = useRecommendations()
+
+  // ✅ 백엔드 서버 주소 정의 (환경 변수로 관리하는 것이 가장 좋습니다)
+  const BACKEND_URL = "http://localhost:8000";
 
   return (
     <section id="recommendation-section" className="mt-8">
@@ -83,7 +86,7 @@ export default function RecommendationSection({ onFoodSelect, onOpenChat, onOpen
             <div onClick={() => onFoodSelect(food.name)}>
               <div className="overflow-hidden rounded-lg mb-3">
                 <img
-                  src="/placeholder.svg"
+                  src={food.imageUrl || "/placeholder.svg"}
                   alt={food.name}
                   className="w-full h-24 object-cover transform hover:scale-110 transition-transform duration-500"
                 />
