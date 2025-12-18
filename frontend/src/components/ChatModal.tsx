@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react"
 import { X, Send } from "lucide-react"
+import { useCharacter } from "../hooks/useCharacter"
+import { getCatImageByLevel } from "../lib/characterImage"
 
 interface Message {
   text: string
@@ -19,6 +21,8 @@ export default function ChatModal({ onClose }: ChatModalProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [sessionId, setSessionId] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { character } = useCharacter()
+  const catSrc = getCatImageByLevel(character?.level ?? 0)
 
   // 처음 열릴 때 세션 아이디 + 인사 메시지
   useEffect(() => {
@@ -108,7 +112,7 @@ export default function ChatModal({ onClose }: ChatModalProps) {
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-amber-400/40 bg-white overflow-hidden">
               <img
-                src="/cat/catpt.png"
+                src={catSrc}
                 alt="밥토리 캐릭터"
                 className="w-full h-full object-contain"
               />
@@ -135,7 +139,7 @@ export default function ChatModal({ onClose }: ChatModalProps) {
                 <div className="flex items-end gap-2 max-w-[80%]">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border border-amber-400/40 bg-white overflow-hidden">
                     <img
-                      src="/cat/catpt.png"
+                      src={catSrc}
                       alt="밥토리 캐릭터"
                       className="w-full h-full object-contain"
                     />
@@ -164,7 +168,7 @@ export default function ChatModal({ onClose }: ChatModalProps) {
             <div className="flex justify-start">
               <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border border-amber-400/40 bg-white overflow-hidden">
                 <img
-                src="/cat/catpt.png"
+                src={catSrc}
                 alt="밥토리 캐릭터"
                 className="w-full h-full object-contain"
                 />

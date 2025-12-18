@@ -19,6 +19,7 @@ interface RecommendResponse {
     category: string | null
     ingredients: string | null
     is_weather_based: boolean
+    imageUrl: string | null // ✅ 백엔드에서 오는 imageUrl 필드 추가
     is_random: boolean
   }[]
 }
@@ -53,6 +54,7 @@ export function useRecommendations() {
           emoji: "🍚", // 나중에 카테고리별로 이모지 바꿔도 됨
           isRecommended: true,
           description: item.reason,
+          imageUrl: item.imageUrl ?? undefined, // ✅ imageUrl을 매핑해줍니다.
         }))
 
         setFoods(mapped)
